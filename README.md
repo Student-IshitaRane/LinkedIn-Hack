@@ -60,8 +60,6 @@ A dual-purpose AI platform to **boost career readiness** and **revolutionize tec
 
 ---
 
-Let me know if you want this converted to a styled Markdown file or need deployment/setup sections added!
-
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
