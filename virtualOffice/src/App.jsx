@@ -1,5 +1,5 @@
 import React, { useState, Suspense } from 'react';
-import AvatarSelector from './components/SelectAvatar.jsx';
+import AvatarSelector from '../frontend/SelectAvatar.jsx';
 import OfficeScene from './components/OfficeScene.jsx';
 
 export default function App() {
