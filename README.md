@@ -1,6 +1,67 @@
-<<<<<<< HEAD
 # LinkedIn-Hack
-=======
+# 🚀 AI InterviewVerse & Virtual Work Simulation
+
+A dual-purpose AI platform to **boost career readiness** and **revolutionize tech hiring** with smart simulations and real-time evaluation.
+
+
+## 🎯 Features
+
+### 🧠 Career & Interview Intelligence
+
+* **AI-Powered Mock Interviews**: Practice tech and HR rounds with instant feedback on tone, clarity, and content relevance.
+* **Resume Analyzer**: ATS score and suggestions to improve.
+
+### 💼 Virtual Work Simulation
+
+* **Virtual Office**: Simulates daily work — standups, check-ins, and team chats with AI avatars.
+* **CultureMatch AI**: Assesses culture fit through real-world dilemmas and casual team interactions.
+* **AI Evaluation Dashboard**: Tracks communication, collaboration, and task performance for recruiters.
+
+
+## 🧪 Tech Stack
+
+### Frontend
+
+* React
+* Vite
+* Tailwind CSS
+* Axios
+* React Router
+
+### Backend
+
+* Node.js
+* Express.js
+* MongoDB
+* Flask (Python)
+* Cloudinary
+
+### AI & ML
+
+* GenAI prompts
+* Text-to-Speech / Speech-to-Text APIs
+* GPT APIs
+* Flask-CORS (integration)
+
+### Tools & Libraries
+
+* socket.io
+* JWT, bcrypt
+* multer, cors, dotenv
+* Postman (API testing)
+
+## 👥 Contributors
+
+* Amisha Gupta
+* Lipsita
+* Avani Mathur
+* Ishita
+* Khushi
+
+---
+
+Let me know if you want this converted to a styled Markdown file or need deployment/setup sections added!
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
