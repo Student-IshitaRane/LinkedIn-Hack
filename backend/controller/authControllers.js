@@ -5,72 +5,84 @@ import dotenv from 'dotenv';
 dotenv.config(); 
 
 const key=process.env.JWT_SECRET;
-User
 
-//REGISTER
-export const register=async (req,resp)=>{
-    //console.log(req.body);
-    try{
-        const{
-            username,
-            emailid,
-            password,}=req.body;
-        if (!emailid || emailid.trim() === '') {
-            return resp.status(400).json({ message: 'Email is required' });
-        }
-        const existingUser = await User.findOne({ emailid });
-        if (existingUser) {
-        return resp.status(400).json({success: false, message: "Email already registered" });
+//register
+export const register = async (req, res) => {
+  try {
+    const { username, emailid, password, role } = req.body;
+
+    if (!username || !emailid || !password || !role) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
     }
-        const salt=await bcrypt.genSalt();
-        const passwordF=await bcrypt.hash(password, salt);
-        const newUser=new User({
-            username,
-            emailid,
-            password:passwordF,
-            role,
-            resumeURL: "", 
-        });
-        const saveUser=await newUser.save();
 
-        const token=jwt.sign({emailid:emailid},key);
-        console.log(token);
-        const userObject =  saveUser.toObject(); 
-        delete userObject.password;
-
-        resp.json({success: true,token,userObject});
-
-        
+    const existingUser = await User.findOne({ emailid });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "Email already registered" });
     }
-    catch(error){
-        console.log("this is the error in registering, ", error);
-        resp.status(500).json({"error":error.message});
-    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new User({
+      username,
+      emailid,
+      password: hashedPassword,
+      role,
+    });
+
+    const savedUser = await newUser.save();
+
+    const token = jwt.sign(
+      { id: savedUser._id, emailid: savedUser.emailid },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    const userObject = savedUser.toObject();
+    delete userObject.password;
+
+    return res.status(201).json({
+      success: true,
+      message: "Registration successful",
+      token,
+      user: userObject,
+    });
+
+  } catch (error) {
+    console.error("Error in register:", error);
+    return res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
 };
 
-//LOGIN
-export const login=async(req,resp)=>{
-    try{
-        const {emailid,password}=req.body;
-        const currentUser=await User.findOne({emailid:emailid});
-        if(!currentUser){
-            return resp.status(404).json({message:"User not found"});
-        }
-        const boolean=await bcrypt.compare(password,currentUser.password);
-        if(!boolean){
-            return resp.status(200).json({success: false, message:"Invalid credentials. Please check again!"});
-        }
-        const token=jwt.sign({emailid:emailid},key);
-        console.log(token);
-        const userObject = currentUser.toObject();
-        delete userObject.password;
+//login
+export const login = async (req, res) => {
+  try {
+    const { emailid, password } = req.body;
 
-        resp.json({success: true,token,userObject});
+    const currentUser = await User.findOne({ emailid });
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
     }
-    catch(error){
-        resp.status(500).json({"error":error.message});
+
+    const match = await bcrypt.compare(password, currentUser.password);
+    if (!match) {
+      return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
-}
+
+    const userObject = currentUser.toObject();
+    delete userObject.password;
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      user: userObject
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+};
+
 
 //GET details
 export const details=async(req,resp)=>{

@@ -15,11 +15,11 @@ const schema=new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["Candidate", "Admin"], //to restrict roles
+        enum: ["Candidate", "Recruiter"],
     },
-    resumeURL: {
-        type: String, //cloudinary URL fetched 
-    },
+    // resumeURL: {
+    //     type: String, //cloudinary URL fetched 
+    // },
     },
     {timestamps:true}
 )

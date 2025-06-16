@@ -24,7 +24,7 @@ const key=process.env.JWT_SECRET;
 
 // export const editProfile = async (req, res) => {
 //   const { emailid } = req.params; // emailid to find user
-//   const { username, resumeURL, password, emailid: newEmailid } = req.body; // fields to update
+//   const { username, password, emailid: newEmailid } = req.body;
 
 //   try {
 //     let user = await User.findOne({ emailid: emailid });
