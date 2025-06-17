@@ -15,6 +15,7 @@ import VirtualWorkSim from './pages/VirtualWorkSim';
 import NavBar from './components/NavBar';
 import Footer from './components/Common/Footer';
 import Setting from './pages/Settings';
+import DashboardHomePage from './pages/DashboardHomePage';
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/signin" element={<Signin />} />
             <Route path="/setting" element={<Setting />} />
+            <Route path="/dashboard-home" element={<DashboardHomePage />} />
             <Route path="/virtual-office" element={<VirtualWorkSim />} />
           </Routes>
         </main>
