@@ -12,6 +12,7 @@ A dual-purpose AI platform to **boost career readiness** and **revolutionize tec
 * **Resume Analyzer**: ATS score and suggestions to improve.
 
 ### 💼 Virtual Work Simulation
+https://office-setup.onrender.com/
 
 * **Virtual Office**: Simulates daily work — standups, check-ins, and team chats with AI avatars.
 * **CultureMatch AI**: Assesses culture fit through real-world dilemmas and casual team interactions.
