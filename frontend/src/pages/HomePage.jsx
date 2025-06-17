@@ -1,17 +1,17 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { FaLinkedin } from "react-icons/fa";
-import heroImage from '../assets/Heroimage.jpg';
-import Amisha from '../assets/Amisha.jpg';
-import Ishita from '../assets/Ishita.jpg';
-import Khusi from '../assets/Khusi.jpg';
-import Lipsita from '../assets/Lipsita.jpg';
-import groupImg from '../assets/GD.jpg';
-import behavioralImg from '../assets/Behaviour.jpg';
-import mockImg from '../assets/AI.jpg';
-import resumeImg from '../assets/Resume.jpg';
-import Avani from '../assets/Avani.jpg';
-import logo from '../assets/logo.png';
+import heroImage from "../assets/Heroimage.jpg";
+import Amisha from "../assets/Amisha.jpg";
+import Ishita from "../assets/Ishita.jpg";
+import Khusi from "../assets/Khusi.jpg";
+import Lipsita from "../assets/Lipsita.jpg";
+import groupImg from "../assets/GD.jpg";
+import behavioralImg from "../assets/Behaviour.jpg";
+import mockImg from "../assets/AI.jpg";
+import resumeImg from "../assets/Resume.jpg";
+import Avani from "../assets/Avani.jpg";
+import virtualOfficeImg from "../assets/VirtualOffice.avif"; 
 
 const teamMembers = [
   {
@@ -19,8 +19,8 @@ const teamMembers = [
     role: "Frontend Developer",
     description:
       "Expert in building responsive, accessible, and high-performance web interfaces.",
-    image: Lipsita ,
-    linkedin: "https://www.linkedin.com/in/lipsita-mahapatro-70a6b92a5/"
+    image: Lipsita,
+    linkedin: "https://www.linkedin.com/in/lipsita-mahapatro-70a6b92a5/",
   },
   {
     name: "Khusi Garg",
@@ -28,7 +28,7 @@ const teamMembers = [
     description:
       "Designs and trains intelligent systems for mock interviews and resume analysis.",
     image: Khusi,
-    linkedin: "https://www.linkedin.com/in/khushi-garg-670126281/"
+    linkedin: "https://www.linkedin.com/in/khushi-garg-670126281/",
   },
   {
     name: "Amisha Gupta",
@@ -36,7 +36,7 @@ const teamMembers = [
     description:
       "Builds robust and scalable APIs for the InterviewVerse platform.",
     image: Amisha,
-    linkedin: "https://www.linkedin.com/in/amisha-gupta-567566291/"
+    linkedin: "https://www.linkedin.com/in/amisha-gupta-567566291/",
   },
   {
     name: "Avani Mathur",
@@ -44,16 +44,16 @@ const teamMembers = [
     description:
       "Designs intuitive user experiences and modern UI systems for seamless navigation.",
     image: Avani,
-    linkedin: "https://www.linkedin.com/in/avani-mathur-555a9a287/"
+    linkedin: "https://www.linkedin.com/in/avani-mathur-555a9a287/",
   },
   {
     name: "Ishita Rane",
     role: "ML Engineer",
     description:
-    "Builds smart systems for real-time feedback and AI-driven interview analysis.",
+      "Builds smart systems for real-time feedback and AI-driven interview analysis.",
     image: Ishita,
-    linkedin: "https://www.linkedin.com/in/ishita-rane-9225b0282/"
-  }
+    linkedin: "https://www.linkedin.com/in/ishita-rane-9225b0282/",
+  },
 ];
 
 const HomePage = () => {
@@ -107,7 +107,7 @@ const HomePage = () => {
           <div className="flex flex-wrap w-full mb-20">
             <div className="lg:w-1/2 w-full mb-6 lg:mb-0">
               <h1 className="sm:text-3xl text-2xl font-medium title-font mb-2 text-white">
-                Welcome to InterviewVerse
+                Explore Our Services
               </h1>
               <div className="h-1 w-20 bg-indigo-500 rounded"></div>
             </div>
@@ -125,8 +125,7 @@ const HomePage = () => {
                 "Simulate interviews with AI avatars to get instant feedback on tone, confidence, and structure.",
                 "Get actionable insights and improvements to optimize your resume for tech recruiters."
               ];
-             const images = [groupImg, behavioralImg, mockImg, resumeImg];
-
+              const images = [groupImg, behavioralImg, mockImg, resumeImg];
 
               return (
                 <div
@@ -155,6 +154,36 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Virtual Work Simulation Section */}
+      <section className="bg-gray-950 text-white py-24 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12">
+          <div className="lg:w-1/2 text-center lg:text-left">
+            <h2 className="text-4xl font-bold mb-4">
+              Experience the Virtual Work Simulation
+            </h2>
+            <p className="text-gray-400 text-lg mb-6">
+              Step into a full day-in-the-life virtual tech office. Powered by GenAI, avatars, STT and TTS, this simulation mimics real job workflows — from standups and manager check-ins to fun hours and peer chats.
+              <br /><br />
+              With CultureMatch AI and dynamic coding challenges, recruiters evaluate real-time behavior, communication, and decision-making — not just resumes. Perfect for students & professionals to showcase how they actually work.
+            </p>
+            <button
+              onClick={() => navigate("/virtual-office")}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 text-lg rounded-lg font-semibold shadow-lg hover:shadow-indigo-700 transition"
+            >
+              Enter VirtualOffice
+            </button>
+          </div>
+
+          <div className="lg:w-1/2 flex justify-center">
+            <img
+              src={virtualOfficeImg}
+              alt="Virtual Work Office"
+              className="rounded-xl shadow-[0_10px_30px_rgba(99,102,241,0.6)] w-full max-w-md object-cover hover:scale-105 transition-transform duration-500 ease-in-out"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Team Section */}
       <section className="bg-black text-white py-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center mb-12">
@@ -162,8 +191,7 @@ const HomePage = () => {
             Meet Our Team
           </h2>
           <p className="mt-4 text-lg text-gray-400">
-            We're a group of developers, designers, and visionaries passionate
-            about transforming interview preparation.
+            We're a group of developers, designers, and visionaries passionate about transforming interview preparation.
           </p>
         </div>
 
@@ -217,3 +245,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
