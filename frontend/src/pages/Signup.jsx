@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { setIsLoggedIn } = useAuth();
 
   const [formData, setFormData] = useState({
     username: '',
@@ -34,6 +36,7 @@ const Signup = () => {
 
       if (data.success) {
         alert('Registration successful!');
+        setIsLoggedIn(true); // mark as logged in
         navigate('/dashboard-home');
       } else {
         alert(data.message || 'Registration failed');
@@ -56,6 +59,7 @@ const Signup = () => {
             placeholder="Full Name"
             value={formData.username}
             onChange={handleChange}
+            required
           />
           <input
             className="p-3 bg-gray-700 border border-indigo-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-300"
@@ -64,6 +68,7 @@ const Signup = () => {
             placeholder="Email Address"
             value={formData.emailid}
             onChange={handleChange}
+            required
           />
           <input
             className="p-3 bg-gray-700 border border-indigo-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-300"
@@ -72,12 +77,14 @@ const Signup = () => {
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}
+            required
           />
           <select
             className="p-3 bg-gray-700 border border-indigo-400 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             name="role"
             value={formData.role}
             onChange={handleChange}
+            required
           >
             <option value="">Select Role</option>
             <option value="Candidate">Candidate</option>
