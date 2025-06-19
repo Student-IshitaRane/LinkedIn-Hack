@@ -1,6 +1,10 @@
-const express = require('express');
-const router = express.Router();
-const gdService = require('../services/gdService');
+// const express = require('express');
+// const router = express.Router();
+// const gdService = require('../services/gdService');
+
+import { Router } from 'express';
+const router = Router();
+import { generateGDTopic, generateAIResponse } from '../services/gdService.js';
 
 // Generate topic endpoint
 router.post('/generate-topic', async (req, res) => {
@@ -29,4 +33,6 @@ router.post('/generate-response', async (req, res) => {
   }
 });
 
-module.exports = router;
+// module.exports = router;
+
+export default router;

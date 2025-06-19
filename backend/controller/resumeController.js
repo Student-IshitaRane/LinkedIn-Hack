@@ -1,7 +1,16 @@
-const fs = require('fs');
-const path = require('path');
-const { extractTextFromPDF } = require('../utils/pdfParser');
-const { analyzeResumeWithGemini } = require('../services/geminiService');
+// const fs = require('fs');
+// const path = require('path');
+// const { extractTextFromPDF } = require('../utils/pdfParser').default;
+// const { analyzeResumeWithGemini } = require('../services/geminiService').default;
+// const fs = require('fs');
+// const path = require('path');
+// const { extractTextFromPDF } = require('../utils/pdfParser').default;
+// const { analyzeResumeWithGemini } = require('../services/geminiService').default;
+
+import fs from 'fs';
+import path from 'path';
+import { extractTextFromPDF } from '../utils/pdfParser.js';
+import { analyzeResumeWithGemini } from '../services/geminiService.js';
 
 // Test connection endpoint
 const testConnection = async (req, res) => {
@@ -77,4 +86,5 @@ const analyzeResume = async (req, res) => {
   }
 };
 
-module.exports = { testConnection, analyzeResume };
+// module.exports = { testConnection, analyzeResume };
+export { testConnection, analyzeResume };

@@ -4,26 +4,31 @@ import dotenv from "dotenv";
 import cors from "cors";
 import http from "http";
 import jwt from "jsonwebtoken";
+import axios from "axios";
+import rateLimit from 'express-rate-limit';
+
+dotenv.config();
+const app = express();
+app.use(express.json());
 
 const server = http.createServer(app);
+const PORT = process.env.PORT || 4000;
 
 app.use(cors());
-app.use(express.json());
+
+const FASTAPI_URL = "http://localhost:8000";
+
 
 // Routes
 import authRoutes from "./routes/auth.js";
 import { verifyToken } from "./middleware/verify.js";
+import interviewRoutes from "./routes/interview.js";
 import userRoutes from "./routes/user.js";
+import gdRoutes from "./routes/gdRoutes.js";
+import resumeRoutes from "./routes/resumeRoutes.js";
 
-
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const rateLimit = require('express-rate-limit');
-const resumeRoutes = require('./routes/resumeRoutes');
-const gdRoutes = require('./routes/gdRoutes');
-
-const app = express();
+// app.use(cors());
+//cors for both fasAPI_backend and frontend
 
 // Configure CORS for your frontend (5173)
 app.use(cors({
@@ -45,7 +50,33 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(limiter);
 
+// FastAPI middleware
+app.use('/api/interview', async (req, res, next) => {
+  try {
+    const url = `${FASTAPI_URL}${req.path}`;
+    
+    const response = await axios({
+      method: req.method,
+      url,
+      data: req.body,
+      headers: {
+        ...req.headers,
+        host: new URL(FASTAPI_URL).host
+      }
+    });
+
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error('FastAPI proxy error:', error.message);
+    res
+      .status(error.response?.status || 500)
+      .json(error.response?.data || { message: error.message });
+  }
+});
+
+
 // Routes
+app.use("/interviews", interviewRoutes);
 app.use('/api/resume', resumeRoutes);
 app.use('/api/gd', gdRoutes);
 app.use("/auth", authRoutes);
@@ -73,14 +104,13 @@ app.use((err, req, res, next) => {
 mongoose.connect(process.env.MONGO_URL)
   .then(() => {
     console.log("Database Connected successfully!");
-    server.listen(PORT, () => console.log(`Running on port ${PORT}`));
+    // server.listen(PORT, () => console.log(`Running on port ${PORT}`));
   })
   .catch((error) => {
     console.error("Database connection failed", error.message);
     process.exit(1);
   });
 
-const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`CORS configured for frontend: http://localhost:5173`);

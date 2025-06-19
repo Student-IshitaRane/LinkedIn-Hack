@@ -1,12 +1,15 @@
-const express = require('express');
+// const express = require('express');
+// const router = express.Router();
+// const { testConnection, analyzeResume } = require('../controller/resumeController.js');
+// const upload = require('../utils/multerConfig');
+import express from 'express';
+import { testConnection, analyzeResume } from '../controller/resumeController.js';
+import upload from '../utils/multerConfig.js';
 const router = express.Router();
-const { testConnection, analyzeResume } = require('../controllers/resumeController');
-const upload = require('../utils/multerConfig');
-
 // Test connection endpoint
 router.post('/test', testConnection);
 
 // Analyze resume endpoint
 router.post('/analyze', upload.single('resume'), analyzeResume);
 
-module.exports = router;
+export default router;

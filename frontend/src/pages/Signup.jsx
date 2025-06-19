@@ -35,6 +35,7 @@ const Signup = () => {
       const data = await response.json();
 
       if (data.success) {
+        localStorage.setItem("user", JSON.stringify(data.user));
         alert('Registration successful!');
         setIsLoggedIn(true); // mark as logged in
         navigate('/dashboard-home');

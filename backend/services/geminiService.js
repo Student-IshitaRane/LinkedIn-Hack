@@ -1,5 +1,10 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-require('dotenv').config();
+// const { GoogleGenerativeAI } = require('@google/generative-ai');
+import { GoogleGenerativeAI } from '@google/generative-ai';
+// require('dotenv').config();
+
+import dotenv from 'dotenv';
+dotenv.config();
+
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
@@ -51,4 +56,5 @@ const analyzeResumeWithGemini = async (resumeText, jobRole, company) => {
   }
 };
 
-module.exports = { analyzeResumeWithGemini };
+// module.exports = { analyzeResumeWithGemini };
+export { analyzeResumeWithGemini };
