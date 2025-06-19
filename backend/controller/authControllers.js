@@ -31,20 +31,12 @@ export const register = async (req, res) => {
     });
 
     const savedUser = await newUser.save();
-
-    const token = jwt.sign(
-      { id: savedUser._id, emailid: savedUser.emailid },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
     const userObject = savedUser.toObject();
     delete userObject.password;
 
     return res.status(201).json({
       success: true,
       message: "Registration successful",
-      token,
       user: userObject,
     });
 
@@ -72,9 +64,16 @@ export const login = async (req, res) => {
     const userObject = currentUser.toObject();
     delete userObject.password;
 
+    const token = jwt.sign(
+      { id: currentUser._id, emailid: currentUser.emailid },
+      key,
+      { expiresIn: "7d" }
+    );
+
     return res.status(200).json({
       success: true,
       message: "Login successful",
+      token,
       user: userObject
     });
 
@@ -82,7 +81,6 @@ export const login = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };
-
 
 //GET details
 export const details=async(req,resp)=>{

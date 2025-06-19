@@ -20,10 +20,12 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authService } from '../services/api';
 
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ emailid: '', password: '' });
+  const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -31,25 +33,20 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
 
     try {
-      const response = await fetch('http://localhost:4000/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-        console.log("Login successful!"); // Log to console
+      const response = await authService.login(formData.emailid, formData.password);
+      
+      if (response.success) {
+        localStorage.setItem("token", response.token);
+        localStorage.setItem("user", JSON.stringify(response.user));
         navigate("/dashboard");
       } else {
-        alert(data.message);
+        setError(response.message || 'Login failed');
       }
     } catch (err) {
-      alert("Server error");
+      setError(err.response?.data?.message || 'Server error');
       console.error(err);
     }
   };
@@ -57,6 +54,11 @@ const Login = () => {
   return (
     <div className="p-10 max-w-md mx-auto">
       <h2 className="text-3xl text-blue-400 mb-4 text-center">Login</h2>
+      {error && (
+        <div className="bg-red-500 text-white p-3 rounded mb-4">
+          {error}
+        </div>
+      )}
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <input
           name="emailid"
@@ -65,6 +67,7 @@ const Login = () => {
           className="p-2 bg-gray-800 border border-blue-400"
           type="text"
           placeholder="Email"
+          required
         />
         <input
           name="password"
@@ -73,8 +76,14 @@ const Login = () => {
           className="p-2 bg-gray-800 border border-blue-400"
           type="password"
           placeholder="Password"
+          required
         />
-        <button className="p-2 bg-blue-500 text-white hover:bg-blue-600">Login</button>
+        <button 
+          type="submit"
+          className="p-2 bg-blue-500 text-white hover:bg-blue-600"
+        >
+          Login
+        </button>
       </form>
     </div>
   );

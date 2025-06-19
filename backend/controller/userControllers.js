@@ -43,7 +43,6 @@ const key=process.env.JWT_SECRET;
 //     }
 
 //     await user.save();
-// //for security, remove password before sending response
 //     const userResponse = user.toObject();
 //     delete userResponse.password;
 
