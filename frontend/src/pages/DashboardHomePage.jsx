@@ -72,13 +72,12 @@ const DashboardHomePage = () => {
           }}
         >
           <h1 className="title-font sm:text-5xl text-4xl mb-6 font-bold text-white drop-shadow-xl">
-            Welcome to InterviewVerse
+            Welcome to NextHire
           </h1>
           <p className="mb-8 leading-relaxed text-lg text-gray-400 max-w-xl">
-            Elevate your interview skills with AI-powered simulations, real-time
-            feedback, and immersive practice rounds. Step into your future with
-            confidence.
+          Master the art of interviewing and thrive in simulated work environments. NextHire empowers you to build confidence, communication, and technical acumen — before the real job begins.
           </p>
+
         </div>
 
         <div
