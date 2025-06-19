@@ -1,12 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Signin = () => {
   const navigate = useNavigate();
+  const { setIsLoggedIn } = useAuth(); // Update login state
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    navigate('/dashboard-home'); 
+    setIsLoggedIn(true);           // Mark user as logged in
+    navigate('/dashboard-home');   // Navigate to dashboard
   };
 
   return (
@@ -17,17 +20,22 @@ const Signin = () => {
         </h2>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <input
-            className="p-3 bg-gray-700 border border-indigo-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-300"
+            className="p-3 bg-gray-700 border border-indigo-400 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 
+                       placeholder-gray-300"
             type="email"
             placeholder="Email Address"
           />
           <input
-            className="p-3 bg-gray-700 border border-indigo-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-300"
+            className="p-3 bg-gray-700 border border-indigo-400 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500 
+                       placeholder-gray-300"
             type="password"
             placeholder="Password"
           />
           <select
-            className="p-3 bg-gray-700 border border-indigo-400 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="p-3 bg-gray-700 border border-indigo-400 rounded-lg 
+                       text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="">Select Role</option>
             <option>Candidate</option>
@@ -35,7 +43,10 @@ const Signin = () => {
           </select>
           <button
             type="submit"
-            className="mt-4 p-3 bg-indigo-600 hover:bg-indigo-700 transition-colors rounded-lg font-semibold text-white uppercase tracking-wide"
+            className="mt-4 p-3 bg-indigo-600 hover:bg-indigo-700 
+                       transition-colors rounded-lg font-semibold text-white 
+                       uppercase tracking-wide focus:outline-none focus:ring-2 
+                       focus:ring-indigo-500"
           >
             Sign In
           </button>
@@ -46,3 +57,4 @@ const Signin = () => {
 };
 
 export default Signin;
+
