@@ -37,13 +37,13 @@ export const authService = {
     return response.data;
   },
 
-  verifyOtp: async (email, otp) => {
-    const response = await api.post(`/auth/verify-otp/${email}`, { otp });
+  verifyOtp: async (emailid, otp) => {
+    const response = await api.post(`/auth/verify-otp/${emailid}`, { otp });
     return response.data;
   },
 
-  resetPassword: async (email, newPassword) => {
-    const response = await api.post(`/auth/reset-password/${email}`, { newPassword });
+  resetPassword: async (emailid, newPassword) => {
+    const response = await api.post(`/auth/reset-password/${emailid}`, { newPassword });
     return response.data;
   },
 };

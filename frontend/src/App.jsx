@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Signin from './pages/Signin';
 import ForgotPassword from './pages/ForgotPassword';
+import VerifyOTP from './pages/VerifyOTP';
 import ResetPassword from './pages/ResetPassword';
 import VirtualWorkSim from './pages/VirtualWorkSim';
 import NavBar from './components/NavBar';
@@ -40,7 +41,8 @@ export default function App() {
               <Route path="/signup" element={<Signup />} />
               <Route path="/signin" element={<Signin />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password/:email" element={<ResetPassword />} />
+              <Route path="/verify-otp/:emailid" element={<VerifyOTP />} />
+              <Route path="/reset-password/:emailid" element={<ResetPassword />} />
               <Route path="/setting" element={<Setting />} />
               <Route path="/dashboard-home" element={<DashboardHomePage />} />
               <Route path="/virtual-office" element={<VirtualWorkSim />} />
