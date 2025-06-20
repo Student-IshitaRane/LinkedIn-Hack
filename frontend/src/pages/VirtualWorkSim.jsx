@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import virtualOfficeImg from "../assets/VirtualOffice.avif"; 
 
 const resources = [
   {
@@ -104,6 +105,37 @@ const resources = [
 
 export default function ResourcesPage() {
   return (
+    <div>
+          {/* Virtual Work Simulation Section */}
+          <section className="bg-gray-950 text-white py-24 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12">
+              <div className="lg:w-1/2 text-center lg:text-left">
+                <h2 className="text-4xl font-bold mb-4">
+                  Experience the Virtual Work Simulation
+                </h2>
+                <p className="text-gray-400 text-lg mb-6">
+                  Step into a full day-in-the-life virtual tech office. Powered by GenAI, avatars, STT and TTS, this simulation mimics real job workflows — from standups and manager check-ins to fun hours and peer chats.
+                  <br /><br />
+                  With CultureMatch AI and dynamic coding challenges, recruiters evaluate real-time behavior, communication, and decision-making — not just resumes. Perfect for students & professionals to showcase how they actually work.
+                </p>
+                <button
+                  onClick={() => window.open("https://office-sim.vercel.app/", "_blank")}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 text-lg rounded-lg font-semibold shadow-lg hover:shadow-indigo-700 transition"
+                >
+                  Enter VirtualOffice
+                </button>
+              </div>
+    
+              <div className="lg:w-1/2 flex justify-center">
+                <img
+                  src={virtualOfficeImg}
+                  alt="Virtual Work Office"
+                  className="rounded-xl shadow-[0_10px_30px_rgba(99,102,241,0.6)] w-full max-w-md object-cover hover:scale-105 transition-transform duration-500 ease-in-out"
+                />
+              </div>
+            </div>
+          </section>
+
     <section className="bg-gray-900 text-gray-300 body-font">
       <div className="container px-5 py-24 mx-auto">
         {resources.map(({ id, title, description, icon }) => (
@@ -142,7 +174,15 @@ export default function ResourcesPage() {
           </motion.div>
         ))}
       </div>
+          <div className="flex justify-center">
+            <button
+              onClick={() => window.open("https://office-sim.vercel.app/", "_blank")}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 text-lg rounded-lg font-semibold shadow-lg hover:shadow-indigo-700 transition"
+            >
+              Enter VirtualOffice
+            </button></div>
     </section>
+    </div>
   );
 }
 
