@@ -10,6 +10,8 @@ import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Signin from './pages/Signin';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import VirtualWorkSim from './pages/VirtualWorkSim';
 import NavBar from './components/NavBar';
 import Footer from './components/Common/Footer';
@@ -37,6 +39,8 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/signin" element={<Signin />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:email" element={<ResetPassword />} />
               <Route path="/setting" element={<Setting />} />
               <Route path="/dashboard-home" element={<DashboardHomePage />} />
               <Route path="/virtual-office" element={<VirtualWorkSim />} />
