@@ -170,7 +170,7 @@ const HomePage = () => {
               With CultureMatch AI and dynamic coding challenges, recruiters evaluate real-time behavior, communication, and decision-making — not just resumes. Perfect for students & professionals to showcase how they actually work.
             </p>
             <button
-              onClick={() => window.open("https://office-sim.vercel.app/", "_blank")}
+              onClick={() => window.open("https://teamflow-phi.vercel.app/", "_blank")}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 text-lg rounded-lg font-semibold shadow-lg hover:shadow-indigo-700 transition"
             >
               Enter VirtualOffice
