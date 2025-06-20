@@ -395,7 +395,7 @@ const ResumeAnalyzer = () => {
   useEffect(() => {
     const testConnection = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/resume/test', {
+        const response = await fetch('http://localhost:4000/api/resume/test', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -457,7 +457,7 @@ const ResumeAnalyzer = () => {
       formData.append("jobRole", state.jobRole);
       formData.append("company", state.company);
 
-      const response = await fetch("http://localhost:5000/api/resume/analyze", {
+      const response = await fetch("http://localhost:4000/api/resume/analyze", {
         method: "POST",
         body: formData,
       });

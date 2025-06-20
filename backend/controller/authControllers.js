@@ -2,6 +2,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/user.js";
 import dotenv from 'dotenv'; 
+import path from "path";
+import cloudinary from '../middleware/cloudinary.js';
 dotenv.config(); 
 
 const key=process.env.JWT_SECRET;
@@ -93,3 +95,30 @@ export const details=async(req,resp)=>{
         resp.status(500).js({message: "there has been an error oopsie poopsie"});
     }
 }
+
+// Upload profile image
+export const uploadProfileImage = async (req, res) => {
+  try {
+    // Get the file from req.file (if using multer memoryStorage) or req.body (if base64)
+    const file = req.file;
+    if (!file) return res.status(400).json({ success: false, message: 'No file uploaded' });
+
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(file.path, {
+      folder: 'profile_pics',
+      public_id: req.user.id,
+      overwrite: true,
+    });
+
+    // Save the Cloudinary URL in the user model
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { image: result.secure_url },
+      { new: true }
+    );
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error('Cloudinary upload error:', err);
+    res.status(500).json({ success: false, message: 'Image upload failed' });
+  }
+};

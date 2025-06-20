@@ -8,6 +8,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+export default cloudinary;
+
 export const upload = multer({ dest: 'uploaded' }).single('resume'); 
 
 export const cloudinaryFile = async (req, res, next) => {

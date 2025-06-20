@@ -22,36 +22,35 @@ const key=process.env.JWT_SECRET;
 //     }
 // };
 
-// export const editProfile = async (req, res) => {
-//   const { emailid } = req.params; // emailid to find user
-//   const { username, password, emailid: newEmailid } = req.body;
+export const editProfile = async (req, res) => {
+  const { emailid } = req.params; // emailid to find user
+  const { username, password, emailid: newEmailid } = req.body;
 
-//   try {
-//     let user = await User.findOne({ emailid: emailid });
-//     if (!user) {
-//       return res.status(404).json({ message: 'User not found' });
-//     }
+  try {
+    let user = await User.findOne({ emailid: emailid });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-//     if (username) user.username = username;
-//     if (resumeURL) user.resumeURL = resumeURL;
-//     if (newEmailid) user.emailid = newEmailid;
+    if (username) user.username = username;
+    if (newEmailid) user.emailid = newEmailid;
 
-//     // For password, hash it before saving
-//     if (password) {
-//       const salt = await bcrypt.genSalt(10);
-//       user.password = await bcrypt.hash(password, salt);
-//     }
+    // For password, hash it before saving
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
 
-//     await user.save();
-//     const userResponse = user.toObject();
-//     delete userResponse.password;
+    await user.save();
+    const userResponse = user.toObject();
+    delete userResponse.password;
 
-//     res.status(200).json(userResponse);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: 'Server Error' });
-//   }
-// };
+    res.status(200).json(userResponse);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
   
 export const viewProfile = async (req, res) => {
   try {
