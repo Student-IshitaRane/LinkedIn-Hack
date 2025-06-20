@@ -28,7 +28,7 @@ const navigation = [
   { name: 'Interview Simulator', href: '/technical-interview', current: false },
   { name: 'HR Round', href: '/hr-interview', current: false },
   { name: 'GD Practice', href: '/gd-rooms', current: false },
-  { name: 'Resources', href: '/virtual-office', current: false },
+  { name: 'Office Simulator', href: '/virtual-office', current: false },
 ];
 
 const defaultNotifications = [
