@@ -9,7 +9,9 @@ A dual-purpose AI platform to **boost career readiness** and **revolutionize tec
 ### 🧠 Career & Interview Intelligence
 
 * **AI-Powered Mock Interviews**: Practice tech and HR rounds with instant feedback on tone, clarity, and content relevance.
-* **Resume Analyzer**: ATS score and suggestions to improve.
+* **Resume Analyzer**: Upload your resume to get an ATS (Applicant Tracking System) compatibility score along with actionable insights — including keyword optimization, formatting tips, and personalized improvement suggestions to enhance recruiter visibility.
+* **Group Discussion (GD) Rooms**: Engage in real-world group discussion scenarios through AI-moderated sessions. Designed to simulate dynamic, role-based environments, GD Rooms help you enhance communication, teamwork, and leadership skills with structured performance reports.
+
 
 ### 💼 Virtual Work Simulation
 https://teamflow-phi.vercel.app/
