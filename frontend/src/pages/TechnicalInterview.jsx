@@ -1,7 +1,11 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { fastAPIService } from '../services/api';
 
+// TechnicalInterview component handles the full technical interview flow:
+// - Resume upload, role, difficulty selection
+// - Chat-based Q&A with AI (text/audio)
+// - Audio recording, playback, and transcript handling
+// - Feedback and heatmap display after interview
 const TechnicalInterview = () => {
   const [showForm, setShowForm] = useState(false);
   const [resume, setResume] = useState(null);
@@ -19,9 +23,9 @@ const TechnicalInterview = () => {
   const [interviewEnded, setInterviewEnded] = useState(false);
   const [firstQuestionAnswered, setFirstQuestionAnswered] = useState(false);
   const [heatmap, setHeatmap] = useState(null);
-  const [textAnswer, setTextAnswer] = useState(""); // Add state for text answer
-  const [messages, setMessages] = useState([]); // Chat messages state
-  const [isAITyping, setIsAITyping] = useState(false); // AI typing indicator
+  const [textAnswer, setTextAnswer] = useState(""); 
+  const [messages, setMessages] = useState([]); 
+  const [isAITyping, setIsAITyping] = useState(false); 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const chatEndRef = useRef(null);
@@ -30,16 +34,16 @@ const TechnicalInterview = () => {
   const addMessage = (role, content, audioUrl = null) => {
     setMessages(msgs => {
       const newMsgs = [...msgs, { role, content, time: new Date().toLocaleTimeString(), audioUrl }];
-      // Auto-play audio for every assistant message with audioUrl
       if (role === 'assistant' && audioUrl) {
         const audio = new Audio(audioUrl);
-        audio.playbackRate = 1.25; // Increase playback speed
+        audio.playbackRate = 1.20; 
         audio.play();
       }
       return newMsgs;
     });
   };
 
+  // Start the interview: upload resume, set role/difficulty, get first question (with audio)
   const handleInterviewStart = async () => {
     if (!resume || !role.trim() || !difficulty) {
       setError("Please fill all the fields before starting the interview.");
@@ -59,7 +63,6 @@ const TechnicalInterview = () => {
       setFirstQuestionAudio(audioUrl);
       setAwaitingFirstAnswer(true);
       setFirstQuestionAnswered(false); 
-      // Add the first question as an assistant message with audio AND text
       addMessage('assistant', "Let's start with a quick introduction. Please introduce yourself.", audioUrl);
     } catch (err) {
       setError((err.response?.data?.message || err.message || 'Failed to start interview'));
@@ -69,11 +72,11 @@ const TechnicalInterview = () => {
     }
   };
 
-  // Unified answer submission for all questions
+  // Submit an audio answer to the backend, get next question and update chat
   const submitAnswerToTalk = async (audioBlob) => {
     try {
       setLoading(true);
-      setIsAITyping(true); // Show typing indicator
+      setIsAITyping(true); 
       const formData = new FormData();
       formData.append('file', audioBlob, 'answer.webm');
       const response = await fetch('http://localhost:8000/talk', {
@@ -82,7 +85,6 @@ const TechnicalInterview = () => {
       });
       if (!response.ok) throw new Error('Failed to get next question');
       const data = await response.json();
-      // Fetch transcript and add to chat
       try {
         const transcriptRes = await fetch('http://localhost:8000/last_transcript');
         if (transcriptRes.ok) {
@@ -92,35 +94,32 @@ const TechnicalInterview = () => {
           }
         }
       } catch (e) {
-        // Ignore transcript fetch errors
       }
-      // Add the AI response from /talk as an assistant message with audio
       let audioUrl = null;
       if (data.audio_base64) {
-        // Decode base64 audio and create audioUrl
         const audioBytes = Uint8Array.from(atob(data.audio_base64), c => c.charCodeAt(0));
         const audioBlob = new Blob([audioBytes], { type: 'audio/mpeg' });
         audioUrl = URL.createObjectURL(audioBlob);
       }
       addMessage('assistant', data.text || '', audioUrl);
       setFirstQuestionAudio(audioUrl);
-      setFirstQuestionAnswered(true); // After first answer, always true
-      setAwaitingFirstAnswer(true); // Continue the cycle
+      setFirstQuestionAnswered(true); 
+      setAwaitingFirstAnswer(true);
     } catch (err) {
       setError('Failed to submit answer or get next question');
       console.error(err);
     } finally {
-      setIsAITyping(false); // Hide typing indicator
+      setIsAITyping(false); 
       setLoading(false);
     }
   };
 
-  // Submit text answer to backend and update chat (with text and audio)
+  // Submit a text answer to the backend, get next question and update chat (with text and audio)
   const submitTextAnswer = async () => {
     if (!textAnswer.trim()) return;
     addMessage('user', textAnswer);
     setLoading(true);
-    setIsAITyping(true); // Show typing indicator
+    setIsAITyping(true); 
     try {
       const response = await fetch('http://localhost:8000/talk_text_full', {
         method: 'POST',
@@ -129,7 +128,6 @@ const TechnicalInterview = () => {
       });
       if (!response.ok) throw new Error('Failed to get next question');
       const data = await response.json();
-      // Use the correct field name: audio_base64
       const audioBytes = Uint8Array.from(atob(data.audio_base64), c => c.charCodeAt(0));
       const audioBlob = new Blob([audioBytes], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(audioBlob);
@@ -141,11 +139,12 @@ const TechnicalInterview = () => {
     } catch (err) {
       setError('Failed to submit text answer or get next question');
     } finally {
-      setIsAITyping(false); // Hide typing indicator
+      setIsAITyping(false); 
       setLoading(false);
     }
   };
 
+  // Start audio recording using MediaRecorder API
   const startRecording = async () => {
     try {
       if (!navigator.mediaDevices) {
@@ -157,7 +156,6 @@ const TechnicalInterview = () => {
         return;
       }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Force audio-only webm recording
       let options = { mimeType: 'audio/webm' };
       if (!MediaRecorder.isTypeSupported(options.mimeType)) {
         options = {};
@@ -178,7 +176,6 @@ const TechnicalInterview = () => {
         setRecordingMessage("");
         let totalSize = audioChunksRef.current.reduce((acc, chunk) => acc + chunk.size, 0);
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        // Debug: allow user to download the blob for inspection
         if (window.DEBUG_AUDIO_DOWNLOAD) {
           const url = URL.createObjectURL(audioBlob);
           const a = document.createElement('a');
@@ -209,6 +206,7 @@ const TechnicalInterview = () => {
     }
   };
 
+  // Stop audio recording and trigger upload
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
@@ -217,13 +215,12 @@ const TechnicalInterview = () => {
     }
   };
 
-  // End interview and get feedback
+  // End the interview, fetch feedback and heatmap from backend
   const handleEndInterview = async () => {
     setLoading(true);
     try {
       await fetch('http://localhost:8000/end_interview', { method: 'POST' });
       setInterviewEnded(true);
-      // Fetch feedback and heatmap
       const feedbackRes = await fastAPIService.getFeedback();
       setFeedback(feedbackRes.data.feedback);
       const heatmapRes = await fastAPIService.getFeedbackHeatmap();
@@ -235,6 +232,7 @@ const TechnicalInterview = () => {
     }
   };
 
+  // Auto-scroll chat to bottom when messages or typing indicator change
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -470,17 +468,16 @@ const TechnicalInterview = () => {
                   <button
                     onClick={isRecording ? stopRecording : startRecording}
                     className={`px-4 py-2 rounded-lg font-semibold shadow-lg transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900
-                      ${isRecording ? 'bg-red-600 hover:bg-red-700' : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-indigo-500/50'}`}
+                      ${isRecording ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
                     disabled={loading}
                     title={isRecording ? 'Stop Recording' : 'Start Recording'}
                   >
                     {isRecording ? (
-                      // Show mic icon when recording
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v2m0 0c-3.314 0-6-2.686-6-6m12 0c0 3.314-2.686 6-6 6m0-6v-6a2 2 0 1 1 4 0v6a2 2 0 1 1-4 0z" />
-                      </svg>
+                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><rect x="6" y="6" width="8" height="8" rx="2"/></svg>
                     ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" /></svg>
+                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a1 1 0 1 1 2 0c0 3.866-3.134 7-7 7s-7-3.134-7-7a1 1 0 1 1 2 0c0 2.757 2.243 5 5 5s5-2.243 5-5z"/>
+                      </svg>
                     )}
                   </button>
                 </div>
