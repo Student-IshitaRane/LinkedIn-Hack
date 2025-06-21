@@ -132,4 +132,22 @@ export const fastAPIService = {
     });
     return response.data;
   },
-}; 
+
+  getFirstQuestion: async () => {
+    // Fetch the introduction audio from /first_question
+    const response = await axios.get(`${FASTAPI_URL}/first_question`, {
+      responseType: 'arraybuffer', // Expect audio response
+    });
+    return response;
+  },
+
+  getFeedback: async () => {
+    const response = await axios.get(`${FASTAPI_URL}/feedback`);
+    return response;
+  },
+
+  getFeedbackHeatmap: async () => {
+    const response = await axios.get(`${FASTAPI_URL}/feedback_heatmap`);
+    return response;
+  },
+};

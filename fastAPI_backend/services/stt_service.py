@@ -9,15 +9,19 @@ ASSEMBLYAI_ANALYSIS_FILE = Path("assemblyai_analysis.pkl")
 
 def analyze_audio_with_assemblyai(audio_file_path):
     headers = {'authorization': assemblyai_api_key}
+    print(f"Uploading audio file to AssemblyAI: {audio_file_path}")
     with open(audio_file_path, 'rb') as f:
         upload_response = requests.post(
             'https://api.assemblyai.com/v2/upload',
             headers=headers,
-            files={'file': f}
+            files={'file': ('audio.wav', f, 'audio/wav')}
         )
+    print(f"Upload response status: {upload_response.status_code}")
     if upload_response.status_code != 200:
+        print(f"Upload failed: {upload_response.text}")
         raise Exception("AssemblyAI upload failed")
     audio_url = upload_response.json()['upload_url']
+    print(f"Audio uploaded. URL: {audio_url}")
 
     json_data = {
         "audio_url": audio_url,
@@ -28,20 +32,26 @@ def analyze_audio_with_assemblyai(audio_file_path):
         json=json_data,
         headers=headers
     )
+    print(f"Transcript response status: {transcript_response.status_code}")
     if transcript_response.status_code != 200:
         print("AssemblyAI transcript error:", transcript_response.status_code, transcript_response.text)
         raise Exception("AssemblyAI transcript request failed")
     transcript_id = transcript_response.json()['id']
+    print(f"Transcript ID: {transcript_id}")
 
     while True:
+        print(f"Polling transcript status for ID: {transcript_id}")
         polling = requests.get(
             f"https://api.assemblyai.com/v2/transcript/{transcript_id}",
             headers=headers
         )
         result = polling.json()
+        print(f"Polling result: {result}")
         if result['status'] == 'completed':
+            print("Transcription completed.")
             break
         elif result['status'] == 'failed':
+            print("Transcription failed.")
             raise Exception("AssemblyAI transcription failed")
         time.sleep(3)
     return result

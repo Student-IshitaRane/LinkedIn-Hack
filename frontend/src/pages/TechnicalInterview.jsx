@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { interviewService } from '../services/api';
+import React, { useState, useRef, useEffect } from "react";
+import { fastAPIService } from '../services/api';
 
 const TechnicalInterview = () => {
   const [showForm, setShowForm] = useState(false);
@@ -11,8 +11,33 @@ const TechnicalInterview = () => {
   const [interviewStarted, setInterviewStarted] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [firstQuestionAudio, setFirstQuestionAudio] = useState(null);
+  const [awaitingFirstAnswer, setAwaitingFirstAnswer] = useState(false);
+  const [recordingMessage, setRecordingMessage] = useState("");
+  const [feedback, setFeedback] = useState(null);
+  const [interviewEnded, setInterviewEnded] = useState(false);
+  const [firstQuestionAnswered, setFirstQuestionAnswered] = useState(false);
+  const [heatmap, setHeatmap] = useState(null);
+  const [textAnswer, setTextAnswer] = useState(""); // Add state for text answer
+  const [messages, setMessages] = useState([]); // Chat messages state
+  const [isAITyping, setIsAITyping] = useState(false); // AI typing indicator
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const chatEndRef = useRef(null);
+
+  // Add message to chat
+  const addMessage = (role, content, audioUrl = null) => {
+    setMessages(msgs => {
+      const newMsgs = [...msgs, { role, content, time: new Date().toLocaleTimeString(), audioUrl }];
+      // Auto-play audio for every assistant message with audioUrl
+      if (role === 'assistant' && audioUrl) {
+        const audio = new Audio(audioUrl);
+        audio.playbackRate = 1.25; // Increase playback speed
+        audio.play();
+      }
+      return newMsgs;
+    });
+  };
 
   const handleInterviewStart = async () => {
     if (!resume || !role.trim() || !difficulty) {
@@ -21,48 +46,164 @@ const TechnicalInterview = () => {
     }
     setError("");
     setLoading(true);
-
+    setInterviewStarted(true); 
+    setShowForm(false);
     try {
-      const response = await interviewService.startInterview({
-        type: 'Technical',
-        difficulty,
-        role
-      });
-
-      if (response.success) {
-        setCurrentQuestion(response.question);
-        setInterviewStarted(true);
-        setShowForm(false);
-      } else {
-        setError(response.message || 'Failed to start interview');
-      }
+      await fastAPIService.analyzeResume(resume);
+      await fastAPIService.setPosition(role);
+      await fastAPIService.setDifficulty(difficulty);
+      await fastAPIService.setInterviewType('technical');
+      const response = await fastAPIService.getFirstQuestion();
+      const audioUrl = URL.createObjectURL(new Blob([response.data], { type: 'audio/mpeg' }));
+      setFirstQuestionAudio(audioUrl);
+      setAwaitingFirstAnswer(true);
+      setFirstQuestionAnswered(false); 
+      // Add the first question as an assistant message with audio AND text
+      addMessage('assistant', "Let's start with a quick introduction. Please introduce yourself.", audioUrl);
     } catch (err) {
-      setError(err.response?.data?.message || 'Server error');
+      setError((err.response?.data?.message || err.message || 'Failed to start interview'));
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+  // Unified answer submission for all questions
+  const submitAnswerToTalk = async (audioBlob) => {
+    try {
+      setLoading(true);
+      setIsAITyping(true); // Show typing indicator
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'answer.webm');
+      const response = await fetch('http://localhost:8000/talk', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) throw new Error('Failed to get next question');
+      const data = await response.json();
+      // Fetch transcript and add to chat
+      try {
+        const transcriptRes = await fetch('http://localhost:8000/last_transcript');
+        if (transcriptRes.ok) {
+          const transcriptData = await transcriptRes.json();
+          if (transcriptData.transcript && transcriptData.transcript.trim()) {
+            addMessage('user', transcriptData.transcript);
+          }
+        }
+      } catch (e) {
+        // Ignore transcript fetch errors
+      }
+      // Add the AI response from /talk as an assistant message with audio
+      let audioUrl = null;
+      if (data.audio_base64) {
+        // Decode base64 audio and create audioUrl
+        const audioBytes = Uint8Array.from(atob(data.audio_base64), c => c.charCodeAt(0));
+        const audioBlob = new Blob([audioBytes], { type: 'audio/mpeg' });
+        audioUrl = URL.createObjectURL(audioBlob);
+      }
+      addMessage('assistant', data.text || '', audioUrl);
+      setFirstQuestionAudio(audioUrl);
+      setFirstQuestionAnswered(true); // After first answer, always true
+      setAwaitingFirstAnswer(true); // Continue the cycle
+    } catch (err) {
+      setError('Failed to submit answer or get next question');
+      console.error(err);
+    } finally {
+      setIsAITyping(false); // Hide typing indicator
+      setLoading(false);
+    }
+  };
+
+  // Submit text answer to backend and update chat (with text and audio)
+  const submitTextAnswer = async () => {
+    if (!textAnswer.trim()) return;
+    addMessage('user', textAnswer);
+    setLoading(true);
+    setIsAITyping(true); // Show typing indicator
+    try {
+      const response = await fetch('http://localhost:8000/talk_text_full', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answer: textAnswer })
+      });
+      if (!response.ok) throw new Error('Failed to get next question');
+      const data = await response.json();
+      // Use the correct field name: audio_base64
+      const audioBytes = Uint8Array.from(atob(data.audio_base64), c => c.charCodeAt(0));
+      const audioBlob = new Blob([audioBytes], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      addMessage('assistant', data.text, audioUrl);
+      setFirstQuestionAudio(audioUrl);
+      setFirstQuestionAnswered(true);
+      setAwaitingFirstAnswer(true);
+      setTextAnswer("");
+    } catch (err) {
+      setError('Failed to submit text answer or get next question');
+    } finally {
+      setIsAITyping(false); // Hide typing indicator
+      setLoading(false);
+    }
+  };
+
   const startRecording = async () => {
     try {
+      if (!navigator.mediaDevices) {
+        setError('Your browser does not support audio recording (no mediaDevices). Please use Chrome or Firefox.');
+        return;
+      }
+      if (!window.MediaRecorder) {
+        setError('Your browser does not support MediaRecorder. Please use Chrome or Firefox.');
+        return;
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorderRef.current = new MediaRecorder(stream);
+      // Force audio-only webm recording
+      let options = { mimeType: 'audio/webm' };
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options = {};
+      }
+      mediaRecorderRef.current = new MediaRecorder(stream, options);
       audioChunksRef.current = [];
-
       mediaRecorderRef.current.ondataavailable = (event) => {
         audioChunksRef.current.push(event.data);
       };
 
+      mediaRecorderRef.current.onerror = (event) => {
+        setError('MediaRecorder error: ' + event.error.name);
+      };
+
+      mediaRecorderRef.current.onstart = () => {
+      };
       mediaRecorderRef.current.onstop = async () => {
+        setRecordingMessage("");
+        let totalSize = audioChunksRef.current.reduce((acc, chunk) => acc + chunk.size, 0);
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await submitAnswer(audioBlob);
+        // Debug: allow user to download the blob for inspection
+        if (window.DEBUG_AUDIO_DOWNLOAD) {
+          const url = URL.createObjectURL(audioBlob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = 'debug_recorded_audio.webm';
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 100);
+        }
+        if (audioBlob.size === 0) {
+          setError('No audio was recorded. Please try again and speak clearly.');
+          return;
+        }
+        await submitAnswerToTalk(audioBlob);
       };
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
+      setRecordingMessage("Recording... Speak now!");
     } catch (err) {
-      setError('Failed to access microphone');
+      setError('Failed to access microphone: ' + (err.message || err));
+      setRecordingMessage("");
       console.error(err);
     }
   };
@@ -71,36 +212,33 @@ const TechnicalInterview = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      setRecordingMessage("");
     }
   };
 
-  const submitAnswer = async (audioBlob) => {
+  // End interview and get feedback
+  const handleEndInterview = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      if (!currentQuestion || !currentQuestion.id) {
-        setError('No current question available.');
-        setLoading(false);
-        return;
-      }
-      const response = await interviewService.submitAnswer(currentQuestion.id, audioBlob);
-      // Create audio URL from response
-      const audioUrl = URL.createObjectURL(new Blob([response], { type: 'audio/mpeg' }));
-      // Play the response
-      const audio = new Audio(audioUrl);
-      await audio.play();
-      // Update question state
-      setCurrentQuestion(prev => ({
-        ...prev,
-        answer: 'Submitted',
-        feedback: 'Processing...'
-      }));
+      await fetch('http://localhost:8000/end_interview', { method: 'POST' });
+      setInterviewEnded(true);
+      // Fetch feedback and heatmap
+      const feedbackRes = await fastAPIService.getFeedback();
+      setFeedback(feedbackRes.data.feedback);
+      const heatmapRes = await fastAPIService.getFeedbackHeatmap();
+      setHeatmap(heatmapRes.data.heatmap);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit answer');
-      console.error(err);
+      setError('Failed to end interview or fetch feedback');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isAITyping]);
 
   return (
     <section className="relative text-gray-400 bg-gray-900 body-font overflow-hidden">
@@ -119,7 +257,7 @@ const TechnicalInterview = () => {
         <div className="flex flex-wrap -m-2 mb-16">
           {/* Left Column */}
           <div className="w-full md:w-1/2 flex flex-wrap">
-            {[
+            { [
               {
                 alt: "AI Avatar Interface",
                 src: "https://dummyimage.com/500x300/1e40af/ffffff&text=AI+Avatar+View",
@@ -145,7 +283,7 @@ const TechnicalInterview = () => {
 
           {/* Right Column */}
           <div className="w-full md:w-1/2 flex flex-wrap">
-            {[
+            { [
               {
                 alt: "Feedback Heatmap",
                 src: "https://dummyimage.com/601x361/1e293b/ffffff&text=Confidence+Heatmap",
@@ -254,30 +392,177 @@ const TechnicalInterview = () => {
         )}
 
         {/* Interview Interface */}
-        {interviewStarted && (
+        {interviewStarted && !interviewEnded && (
           <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/40 transition-all duration-300">
             <div className="w-full max-w-2xl bg-white/10 backdrop-blur-xl text-white p-8 rounded-2xl shadow-2xl relative animate-fadeIn">
               <h2 className="text-2xl font-semibold mb-6 text-center">Interview in Progress</h2>
-              {currentQuestion ? (
-                <div className="mb-6">
-                  <p className="text-gray-300 mb-4 text-lg">{currentQuestion.question}</p>
-                  <div className="flex justify-center space-x-4">
-                    <button
-                      onClick={isRecording ? stopRecording : startRecording}
-                      className={`px-6 py-2 rounded-lg font-semibold shadow-lg transition duration-300 ${
-                        isRecording 
-                          ? 'bg-red-600 hover:bg-red-700' 
-                          : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-indigo-500/50'
-                      } hover:scale-105`}
-                      disabled={loading}
-                    >
-                      {isRecording ? 'Stop Recording' : 'Start Recording'}
-                    </button>
-                  </div>
+              {error && <div className="mb-4 text-center text-red-400">{error}</div>}
+              {firstQuestionAudio && !firstQuestionAnswered && (
+                <div className="mb-6 text-center text-gray-300 bg-gradient-to-r from-blue-900/40 to-indigo-900/40 p-6 rounded-xl shadow-lg border border-blue-700">
+                  {/* <p className="text-lg font-medium text-white mb-4">First question: </p> */}
+                  <span className="text-white">Let's start with a quick introduction. Please introduce yourself.</span>
+                </div>
+              )}
+              {firstQuestionAnswered && (
+                <div className="mb-6" />
+              )}
+              {/* Chat History + Input */}
+              <div className="bg-gray-900 rounded-xl p-4 mb-6 max-h-96 min-h-[24rem] flex flex-col justify-end overflow-y-auto shadow-inner border border-gray-700" style={{height: '24rem'}}>
+                <div className="flex-1 overflow-y-auto">
+                  {messages.map((msg, i) => (
+                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-2`}>
+                      <div className={`rounded-lg px-4 py-2 max-w-[75%] text-sm shadow-md ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-green-200'}`}>
+                        <div className="flex items-center mb-1">
+                          <span className={`font-bold mr-2 ${msg.role === 'user' ? 'text-white' : 'text-green-300'}`}>{msg.role === 'user' ? 'You' : 'AI'}</span>
+                          <span className="text-xs text-gray-400">{msg.time}</span>
+                        </div>
+                        <span>{msg.content}</span>
+                        {/* If AI and audioUrl, show audio player */}
+                        {msg.role === 'assistant' && msg.audioUrl && (
+                          <audio 
+                            src={msg.audioUrl} 
+                            controls 
+                            controlsList="nodownload"
+                            className="mt-2 w-full"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {/* AI Typing Indicator */}
+                  {isAITyping && (
+                    <div className="flex justify-start mb-2">
+                      <div className="rounded-lg px-4 py-2 max-w-[75%] text-sm shadow-md bg-gray-700 text-green-200 animate-pulse">
+                        <div className="flex items-center mb-1">
+                          <span className="font-bold mr-2 text-green-300">AI</span>
+                          <span className="text-xs text-gray-400">...</span>
+                        </div>
+                        <span>
+                          <span className="inline-block w-2 h-2 bg-green-400 rounded-full mr-1 animate-bounce"></span>
+                          <span className="inline-block w-2 h-2 bg-green-400 rounded-full mr-1 animate-bounce delay-150"></span>
+                          <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-bounce delay-300"></span>
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+                {/* Text Answer Chatbox with Recording Option - now inside chatbox */}
+                <div className="flex flex-row items-end mt-4 gap-2 w-full max-w-xl mx-auto">
+                  <input
+                    type="text"
+                    className="flex-1 px-4 py-2 rounded-lg border border-gray-600 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    placeholder="Type your answer here..."
+                    value={textAnswer}
+                    onChange={e => setTextAnswer(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') submitTextAnswer(); }}
+                    disabled={loading}
+                  />
+                  <button
+                    onClick={submitTextAnswer}
+                    className="px-4 py-2 rounded-lg font-semibold shadow-lg bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white transition duration-300"
+                    disabled={loading || !textAnswer.trim()}
+                  >
+                    <span className="hidden sm:inline">Send</span>
+                    <svg className="inline w-5 h-5 sm:ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" /></svg>
+                  </button>
+                  <button
+                    onClick={isRecording ? stopRecording : startRecording}
+                    className={`px-4 py-2 rounded-lg font-semibold shadow-lg transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900
+                      ${isRecording ? 'bg-red-600 hover:bg-red-700' : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-indigo-500/50'}`}
+                    disabled={loading}
+                    title={isRecording ? 'Stop Recording' : 'Start Recording'}
+                  >
+                    {isRecording ? (
+                      // Show mic icon when recording
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v2m0 0c-3.314 0-6-2.686-6-6m12 0c0 3.314-2.686 6-6 6m0-6v-6a2 2 0 1 1 4 0v6a2 2 0 1 1-4 0z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" /></svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={handleEndInterview}
+                  className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-8 py-3 rounded-xl font-bold shadow-xl transition duration-300 text-lg tracking-wide focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-gray-900"
+                  disabled={loading}
+                >
+                  End Interview
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {interviewEnded && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/40 transition-all duration-300">
+            <div className="w-full max-w-2xl bg-white/10 backdrop-blur-xl text-white p-8 rounded-2xl shadow-2xl relative animate-fadeIn max-h-[90vh] overflow-y-auto">
+              <h2 className="text-2xl font-semibold mb-6 text-center">Interview Feedback</h2>
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+                  <div className="text-blue-300 text-lg font-semibold">Generating feedback...</div>
+                </div>
+              ) : feedback ? (
+                <div className="bg-gray-900 p-6 rounded-xl shadow-lg border border-green-700 mb-8">
+                  {(() => {
+                    // Split feedback into sections and highlight headers
+                    const lines = feedback.split(/\n+/g).filter(Boolean);
+                    return lines.map((line, idx) => {
+                      if (/^Confidence:/i.test(line)) return <div key={idx} className="mb-4"><span className="text-green-400 font-bold">{line.slice(0, line.indexOf('-')+1)}</span><span className="text-green-200">{line.slice(line.indexOf('-')+1)}</span></div>;
+                      if (/^Tone:/i.test(line)) return <div key={idx} className="mb-4"><span className="text-blue-400 font-bold">{line.slice(0, line.indexOf('-')+1)}</span><span className="text-blue-200">{line.slice(line.indexOf('-')+1)}</span></div>;
+                      if (/^Sentiment:/i.test(line)) return <div key={idx} className="mb-4"><span className="text-yellow-400 font-bold">{line.slice(0, line.indexOf('-')+1)}</span><span className="text-yellow-200">{line.slice(line.indexOf('-')+1)}</span></div>;
+                      if (/^Accuracy:/i.test(line)) return <div key={idx} className="mb-4"><span className="text-purple-400 font-bold">{line.slice(0, line.indexOf('-')+1)}</span><span className="text-purple-200">{line.slice(line.indexOf('-')+1)}</span></div>;
+                      if (/^Overall Summary:/i.test(line)) return <div key={idx} className="mb-6"><span className="text-pink-400 font-bold">Overall Summary:</span><span className="text-pink-200">{line.replace(/^Overall Summary:/i, '')}</span></div>;
+                      if (/^Verdict:/i.test(line)) return <div key={idx} className="mb-2 text-center text-2xl font-extrabold tracking-wider"><span className={line.includes('PASS') ? 'text-green-400' : 'text-red-400'}>{line}</span></div>;
+                      return <div key={idx} className="text-green-200 text-lg text-center font-mono leading-relaxed mb-2">{line}</div>;
+                    });
+                  })()}
                 </div>
               ) : (
-                <div className="mb-6 text-center text-gray-400">Waiting for question...</div>
+                <div className="text-center text-gray-300">No feedback available.</div>
               )}
+              {heatmap && (
+                <div className="bg-gray-800 p-6 rounded-xl shadow-lg border border-blue-700 mt-4">
+                  <h3 className="text-xl font-semibold text-center text-blue-300 mb-4">Vocal Analysis Heatmap</h3>
+                  <div className="flex flex-wrap justify-center gap-4">
+                    {heatmap.map((item, idx) => {
+                      let bg = 'bg-yellow-500 text-black';
+                      if (item.sentiment === 'POSITIVE') bg = 'bg-green-600 text-white';
+                      else if (item.sentiment === 'NEGATIVE') bg = 'bg-red-600 text-white';
+                      // Confidence as opacity (min 0.4, max 1)
+                      const opacity = item.confidence !== null ? Math.max(0.4, item.confidence) : 0.4;
+                      return (
+                        <div key={idx} className={`flex flex-col items-center rounded-lg p-4 min-w-[120px] ${bg}`} style={{ opacity }}>
+                          <span className="text-sm text-gray-200 mb-1">Answer {item.answer}</span>
+                          <span className="text-lg font-bold">{item.confidence !== null ? (item.confidence * 100).toFixed(0) + '%' : 'N/A'}</span>
+                          <span className="mt-1 px-2 py-1 rounded text-xs font-semibold">{item.sentiment || 'N/A'}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={() => {
+                    setInterviewEnded(false);
+                    setInterviewStarted(false);
+                    setMessages([]);
+                    setFeedback(null);
+                    setHeatmap(null);
+                    setFirstQuestionAnswered(false);
+                    setFirstQuestionAudio(null);
+                    setTextAnswer("");
+                    setShowForm(false);
+                  }}
+                  className="bg-gradient-to-r from-gray-700 to-gray-900 hover:from-gray-800 hover:to-black text-white px-8 py-3 rounded-xl font-bold shadow-xl transition duration-300 text-lg tracking-wide focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-gray-900"
+                >
+                  Exit
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -28,12 +28,14 @@ def load_messages():
             for item in data:
                 messages.append(item)
     else:
+        # Always start with an introduction question
         system_prompt = (
-            f"You a friendly interviewer. "
+            f"You are a friendly interviewer. "
             f"You are interviewing the user for a {position} position. "
-            f"Ask {difficulty}-level relevant {interview_type} question at a time, based on the user's resume and previous answers. "
+            f"Ask the first question as: 'Let's start with a quick introduction. Please introduce yourself.' "
+            f"After that, ask {difficulty}-level relevant {interview_type} questions at a time, based on the user's resume and previous answers. "
             "Wait for the user's answer before asking the next question. "
-            "Keep asking questions, until the user says 'end interview'."
+            "Keep asking questions, until the user says 'end interview'. "
             "Keep responses under 30 words and be conversational."
         )
         if resume_context:

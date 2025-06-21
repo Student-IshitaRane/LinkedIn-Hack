@@ -26,7 +26,8 @@ async def get_feedback():
         "Tone: <score>/10 - <explanation>\n"
         "Sentiment: <score>/10 - <explanation>\n"
         "Accuracy: <score>/10 - <explanation>\n"
-        "End with a brief overall summary.\n"
+        "give a brief overall summary.\n"
+        "Also, calculate and display the total score out of 10 as the average of the four section scores. Format: Total Score: <score>/10.\n"
         "Finally, based on the scores, give a final verdict as 'PASS' if the average score is 6 or above, otherwise 'FAIL'. Format: Verdict: PASS/FAIL."
     )
     response = gemini_model.generate_content(feedback_prompt)
