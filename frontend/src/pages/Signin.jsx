@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 
 const Signin = () => {
@@ -83,6 +83,25 @@ const Signin = () => {
             Sign In
           </button>
         </form>
+        
+        <div className="mt-6 text-center">
+          <Link 
+            to="/forgot-password" 
+            className="text-indigo-400 hover:text-indigo-300 text-sm"
+          >
+            Forgot Password?
+          </Link>
+        </div>
+        
+        <div className="mt-2 text-center">
+          <span className="text-gray-400 text-sm">Don't have an account? </span>
+          <Link 
+            to="/signup" 
+            className="text-indigo-400 hover:text-indigo-300 text-sm"
+          >
+            Sign up
+          </Link>
+        </div>
       </div>
     </div>
   );

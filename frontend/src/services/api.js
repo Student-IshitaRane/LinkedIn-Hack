@@ -31,6 +31,21 @@ export const authService = {
     const response = await api.post('/auth/register', userData);
     return response.data;
   },
+
+  sendOtp: async (emailid) => {
+    const response = await api.post(`/auth/send-otp/${emailid}`);
+    return response.data;
+  },
+
+  verifyOtp: async (emailid, otp) => {
+    const response = await api.post(`/auth/verify-otp/${emailid}`, { otp });
+    return response.data;
+  },
+
+  resetPassword: async (emailid, newPassword) => {
+    const response = await api.post(`/auth/reset-password/${emailid}`, { newPassword });
+    return response.data;
+  },
 };
 
 // Interview Services
