@@ -74,14 +74,28 @@ async def last_transcript():
 
 @router.post("/set_position")
 async def set_position(position: str = Body(..., embed=True)):
-    from utils.file_utils import POSITION_FILE, DATABASE_FILE, ASSEMBLYAI_ANALYSIS_FILE
+    from utils.file_utils import POSITION_FILE, DATABASE_FILE, ASSEMBLYAI_ANALYSIS_FILE, DIFFICULTY_FILE
     import json
+    # Read difficulty if it exists
+    if DIFFICULTY_FILE.exists():
+        difficulty = DIFFICULTY_FILE.read_text().strip()
+    else:
+        difficulty = "Beginner"
     # Reset database.json to system prompt
-    DATABASE_FILE.write_text(json.dumps([{
-        "role": "system",
-        "content": "You are a friendly interviewer. You are interviewing the user for an AI intern position. Ask the first question as: 'Let's start with a quick introduction. Please introduce yourself.' After that, ask Beginner-level relevant technical questions one at a time, based on the user's resume and previous answers. Wait for the user's answer before asking the next question. Do NOT end the interview yourself; only end when the user says 'end interview'. Keep responses under 30 words and be conversational."
-    }], indent=4))
-    # Remove assemblyai_analysis.pkl if it exists
+    DATABASE_FILE.write_text(json.dumps([
+        {
+            "role": "system",
+            "content": (
+                "You are a friendly interviewer. "
+                f"You are interviewing the user for a {position} position. "
+                "Ask the first question as: 'Let's start with a quick introduction. Please introduce yourself.' "
+                f"After that, ask {difficulty}-level relevant technical questions one at a time, based on the user's resume and previous answers. "
+                "Wait for the user's answer before asking the next question. Do NOT end the interview yourself; only end when the user says 'end interview'. "
+                "Keep responses under 30 words and be conversational."
+            )
+        }
+    ], indent=4))
+
     if ASSEMBLYAI_ANALYSIS_FILE.exists():
         ASSEMBLYAI_ANALYSIS_FILE.unlink()
     POSITION_FILE.write_text(position)
@@ -95,8 +109,22 @@ async def set_difficulty(difficulty: str = Body(..., embed=True)):
 
 @router.post("/set_interview_type")
 async def set_interview_type(interview_type: str = Body(..., embed=True)):
-    from utils.file_utils import INTERVIEW_TYPE_FILE
+    from utils.file_utils import INTERVIEW_TYPE_FILE, DATABASE_FILE
+    import json
     INTERVIEW_TYPE_FILE.write_text(interview_type)
+    # Set a custom system prompt for HR interviews
+    if interview_type == "hr":
+        DATABASE_FILE.write_text(json.dumps([
+            {
+                "role": "system",
+                "content": (
+                    "You are a friendly HR interviewer. Ask common HR interview questions one at a time. "
+                    "Guide the candidate to use the STAR Method (Situation, Task, Action, Result) in their answers. "
+                    "Wait for the user's answer before asking the next question. Do NOT end the interview yourself. Only end when the user says 'end interview'. "
+                    "Keep responses under 40 words and be conversational."
+                )
+            }
+        ], indent=4))
     return {"message": f"Interview type set to '{interview_type}'"}
 
 @router.post("/end_interview")
