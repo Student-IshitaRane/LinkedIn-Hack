@@ -6,6 +6,7 @@ import { fastAPIService } from '../services/api';
 // - Chat-based Q&A with AI (text/audio)
 // - Audio recording, playback, and transcript handling
 // - Feedback and heatmap display after interview
+// - Camera streaming for user visibility
 const TechnicalInterview = () => {
   const [showForm, setShowForm] = useState(false);
   const [resume, setResume] = useState(null);
@@ -25,10 +26,69 @@ const TechnicalInterview = () => {
   const [heatmap, setHeatmap] = useState(null);
   const [textAnswer, setTextAnswer] = useState(""); 
   const [messages, setMessages] = useState([]); 
-  const [isAITyping, setIsAITyping] = useState(false); 
+  const [isAITyping, setIsAITyping] = useState(false);
+  // Camera states
+  const [cameraStream, setCameraStream] = useState(null);
+  const [cameraError, setCameraError] = useState("");
+  const [showCamera, setShowCamera] = useState(true);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const chatEndRef = useRef(null);
+  const videoRef = useRef(null);
+
+  // Start camera stream
+  const startCamera = async () => {
+    try {
+      setCameraError("");
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: "user"
+        }, 
+        audio: false 
+      });
+      setCameraStream(stream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      setCameraError('Failed to access camera: ' + (err.message || err));
+      console.error('Camera error:', err);
+    }
+  };
+
+  // Stop camera stream
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    }
+  };
+
+  // Toggle camera visibility
+  const toggleCamera = () => {
+    setShowCamera(!showCamera);
+  };
+
+  // Cleanup camera when component unmounts or interview ends
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
+  // Start camera when interview starts
+  useEffect(() => {
+    if (interviewStarted && !interviewEnded) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+  }, [interviewStarted, interviewEnded]);
 
   // Add message to chat
   const addMessage = (role, content, audioUrl = null) => {
@@ -393,103 +453,176 @@ const TechnicalInterview = () => {
         {/* Interview Interface */}
         {interviewStarted && !interviewEnded && (
           <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/40 transition-all duration-300">
-            <div className="w-full max-w-2xl bg-white/10 backdrop-blur-xl text-white p-8 rounded-2xl shadow-2xl relative animate-fadeIn">
+            <div className="w-full max-w-6xl bg-white/10 backdrop-blur-xl text-white p-8 rounded-2xl shadow-2xl relative animate-fadeIn">
               <h2 className="text-2xl font-semibold mb-6 text-center">Interview in Progress</h2>
               {error && <div className="mb-4 text-center text-red-400">{error}</div>}
-              {firstQuestionAudio && !firstQuestionAnswered && (
-                <div className="mb-6 text-center text-gray-300 bg-gradient-to-r from-blue-900/40 to-indigo-900/40 p-6 rounded-xl shadow-lg border border-blue-700">
-                  {/* <p className="text-lg font-medium text-white mb-4">First question: </p> */}
-                  <span className="text-white">Let's start with a quick introduction. Please introduce yourself.</span>
-                </div>
-              )}
-              {firstQuestionAnswered && (
-                <div className="mb-6" />
-              )}
-              {/* Chat History + Input */}
-              <div className="bg-gray-900 rounded-xl p-4 mb-6 max-h-96 min-h-[24rem] flex flex-col justify-end overflow-y-auto shadow-inner border border-gray-700" style={{height: '24rem'}}>
-                <div className="flex-1 overflow-y-auto">
-                  {messages.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-2`}>
-                      <div className={`rounded-lg px-4 py-2 max-w-[75%] text-sm shadow-md ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-green-200'}`}>
-                        <div className="flex items-center mb-1">
-                          <span className={`font-bold mr-2 ${msg.role === 'user' ? 'text-white' : 'text-green-300'}`}>{msg.role === 'user' ? 'You' : 'AI'}</span>
-                          <span className="text-xs text-gray-400">{msg.time}</span>
-                        </div>
-                        <span>{msg.content}</span>
-                        {/* If AI and audioUrl, show audio player */}
-                        {msg.role === 'assistant' && msg.audioUrl && (
-                          <audio 
-                            src={msg.audioUrl} 
-                            controls 
-                            controlsList="nodownload"
-                            className="mt-2 w-full"
-                          />
+              {cameraError && <div className="mb-4 text-center text-yellow-400">{cameraError}</div>}
+              
+              <div className="flex flex-col lg:flex-row gap-6">
+                {/* Camera Section */}
+                <div className="lg:w-1/3">
+                  <div className="bg-gray-900 rounded-xl p-4 shadow-lg border border-gray-700">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-white">Your Camera</h3>
+                      <button
+                        onClick={toggleCamera}
+                        className="px-3 py-1 rounded-lg text-sm font-medium transition duration-300"
+                        style={{
+                          backgroundColor: showCamera ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                          color: showCamera ? '#4ade80' : '#f87171'
+                        }}
+                      >
+                        {showCamera ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                    
+                    {showCamera && (
+                      <div className="relative">
+                        <video
+                          ref={videoRef}
+                          autoPlay
+                          playsInline
+                          muted
+                          className="w-full h-64 object-cover rounded-lg bg-gray-800"
+                          style={{ transform: 'scaleX(-1)' }} // Mirror the video
+                        />
+                        {!cameraStream && !cameraError && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-lg">
+                            <div className="text-center">
+                              <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                              <p className="text-gray-400 text-sm">Starting camera...</p>
+                            </div>
+                          </div>
+                        )}
+                        {cameraError && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-lg">
+                            <div className="text-center">
+                              <svg className="w-12 h-12 text-red-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                              </svg>
+                              <p className="text-red-400 text-sm">Camera unavailable</p>
+                              <button
+                                onClick={startCamera}
+                                className="mt-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-xs transition duration-300"
+                              >
+                                Retry
+                              </button>
+                            </div>
+                          </div>
                         )}
                       </div>
-                    </div>
-                  ))}
-                  {/* AI Typing Indicator */}
-                  {isAITyping && (
-                    <div className="flex justify-start mb-2">
-                      <div className="rounded-lg px-4 py-2 max-w-[75%] text-sm shadow-md bg-gray-700 text-green-200 animate-pulse">
-                        <div className="flex items-center mb-1">
-                          <span className="font-bold mr-2 text-green-300">AI</span>
-                          <span className="text-xs text-gray-400">...</span>
+                    )}
+                    
+                    {!showCamera && (
+                      <div className="w-full h-64 bg-gray-800 rounded-lg flex items-center justify-center">
+                        <div className="text-center">
+                          <svg className="w-16 h-16 text-gray-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-gray-400 text-sm">Camera hidden</p>
                         </div>
-                        <span>
-                          <span className="inline-block w-2 h-2 bg-green-400 rounded-full mr-1 animate-bounce"></span>
-                          <span className="inline-block w-2 h-2 bg-green-400 rounded-full mr-1 animate-bounce delay-150"></span>
-                          <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-bounce delay-300"></span>
-                        </span>
                       </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Chat Section */}
+                <div className="lg:w-2/3">
+                  {firstQuestionAudio && !firstQuestionAnswered && (
+                    <div className="mb-6 text-center text-gray-300 bg-gradient-to-r from-blue-900/40 to-indigo-900/40 p-6 rounded-xl shadow-lg border border-blue-700">
+                      <span className="text-white">Let's start with a quick introduction. Please introduce yourself.</span>
                     </div>
                   )}
-                  <div ref={chatEndRef} />
+                  {firstQuestionAnswered && (
+                    <div className="mb-6" />
+                  )}
+                  {/* Chat History + Input */}
+                  <div className="bg-gray-900 rounded-xl p-4 mb-6 max-h-96 min-h-[24rem] flex flex-col justify-end overflow-y-auto shadow-inner border border-gray-700" style={{height: '24rem'}}>
+                    <div className="flex-1 overflow-y-auto">
+                      {messages.map((msg, i) => (
+                        <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-2`}>
+                          <div className={`rounded-lg px-4 py-2 max-w-[75%] text-sm shadow-md ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-green-200'}`}>
+                            <div className="flex items-center mb-1">
+                              <span className={`font-bold mr-2 ${msg.role === 'user' ? 'text-white' : 'text-green-300'}`}>{msg.role === 'user' ? 'You' : 'AI'}</span>
+                              <span className="text-xs text-gray-400">{msg.time}</span>
+                            </div>
+                            <span>{msg.content}</span>
+                            {/* If AI and audioUrl, show audio player */}
+                            {msg.role === 'assistant' && msg.audioUrl && (
+                              <audio 
+                                src={msg.audioUrl} 
+                                controls 
+                                controlsList="nodownload"
+                                className="mt-2 w-full"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {/* AI Typing Indicator */}
+                      {isAITyping && (
+                        <div className="flex justify-start mb-2">
+                          <div className="rounded-lg px-4 py-2 max-w-[75%] text-sm shadow-md bg-gray-700 text-green-200 animate-pulse">
+                            <div className="flex items-center mb-1">
+                              <span className="font-bold mr-2 text-green-300">AI</span>
+                              <span className="text-xs text-gray-400">...</span>
+                            </div>
+                            <span>
+                              <span className="inline-block w-2 h-2 bg-green-400 rounded-full mr-1 animate-bounce"></span>
+                              <span className="inline-block w-2 h-2 bg-green-400 rounded-full mr-1 animate-bounce delay-150"></span>
+                              <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-bounce delay-300"></span>
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      <div ref={chatEndRef} />
+                    </div>
+                    {/* Text Answer Chatbox with Recording Option - now inside chatbox */}
+                    <div className="flex flex-row items-end mt-4 gap-2 w-full max-w-xl mx-auto">
+                      <input
+                        type="text"
+                        className="flex-1 px-4 py-2 rounded-lg border border-gray-600 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        placeholder="Type your answer here..."
+                        value={textAnswer}
+                        onChange={e => setTextAnswer(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') submitTextAnswer(); }}
+                        disabled={loading}
+                      />
+                      <button
+                        onClick={submitTextAnswer}
+                        className="px-4 py-2 rounded-lg font-semibold shadow-lg bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white transition duration-300"
+                        disabled={loading || !textAnswer.trim()}
+                      >
+                        <span className="hidden sm:inline">Send</span>
+                        <svg className="inline w-5 h-5 sm:ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" /></svg>
+                      </button>
+                      <button
+                        onClick={isRecording ? stopRecording : startRecording}
+                        className={`px-4 py-2 rounded-lg font-semibold shadow-lg transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900
+                          ${isRecording ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                        disabled={loading}
+                        title={isRecording ? 'Stop Recording' : 'Start Recording'}
+                      >
+                        {isRecording ? (
+                          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><rect x="6" y="6" width="8" height="8" rx="2"/></svg>
+                        ) : (
+                          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a1 1 0 1 1 2 0c0 3.866-3.134 7-7 7s-7-3.134-7-7a1 1 0 1 1 2 0c0 2.757 2.243 5 5 5s5-2.243 5-5z"/>
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-center mt-8">
+                    <button
+                      onClick={handleEndInterview}
+                      className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-8 py-3 rounded-xl font-bold shadow-xl transition duration-300 text-lg tracking-wide focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-gray-900"
+                      disabled={loading}
+                    >
+                      End Interview
+                    </button>
+                  </div>
                 </div>
-                {/* Text Answer Chatbox with Recording Option - now inside chatbox */}
-                <div className="flex flex-row items-end mt-4 gap-2 w-full max-w-xl mx-auto">
-                  <input
-                    type="text"
-                    className="flex-1 px-4 py-2 rounded-lg border border-gray-600 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-                    placeholder="Type your answer here..."
-                    value={textAnswer}
-                    onChange={e => setTextAnswer(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') submitTextAnswer(); }}
-                    disabled={loading}
-                  />
-                  <button
-                    onClick={submitTextAnswer}
-                    className="px-4 py-2 rounded-lg font-semibold shadow-lg bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white transition duration-300"
-                    disabled={loading || !textAnswer.trim()}
-                  >
-                    <span className="hidden sm:inline">Send</span>
-                    <svg className="inline w-5 h-5 sm:ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M12 5l7 7-7 7" /></svg>
-                  </button>
-                  <button
-                    onClick={isRecording ? stopRecording : startRecording}
-                    className={`px-4 py-2 rounded-lg font-semibold shadow-lg transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-gray-900
-                      ${isRecording ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
-                    disabled={loading}
-                    title={isRecording ? 'Stop Recording' : 'Start Recording'}
-                  >
-                    {isRecording ? (
-                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><rect x="6" y="6" width="8" height="8" rx="2"/></svg>
-                    ) : (
-                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3zm5-3a1 1 0 1 1 2 0c0 3.866-3.134 7-7 7s-7-3.134-7-7a1 1 0 1 1 2 0c0 2.757 2.243 5 5 5s5-2.243 5-5z"/>
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-              <div className="flex justify-center mt-8">
-                <button
-                  onClick={handleEndInterview}
-                  className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-8 py-3 rounded-xl font-bold shadow-xl transition duration-300 text-lg tracking-wide focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-gray-900"
-                  disabled={loading}
-                >
-                  End Interview
-                </button>
               </div>
             </div>
           </div>
