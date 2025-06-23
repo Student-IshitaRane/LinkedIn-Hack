@@ -9,9 +9,17 @@ def get_chat_response(user_message):
     from database.chat_history import load_messages, save_messages
     messages = load_messages()
     messages.append({"role": "user", "content": user_message['text']})
-    response = gemini_model.generate_content(
-        "\n".join(f"{m['role']}: {m['content']}" for m in messages) + "\nAssistant:"
-    )
+    resume_context = ""
+    try:
+        with open("resume_context.txt", "r", encoding="utf-8") as f:
+            resume_context = f.read().strip()
+    except Exception:
+        pass
+    prompt = ""
+    if resume_context:
+        prompt += f"Resume Context:\n{resume_context}\n\n"
+    prompt += "\n".join(f"{m['role']}: {m['content']}" for m in messages) + "\nAssistant:"
+    response = gemini_model.generate_content(prompt)
     gemini_reply = response.text.strip()
     save_messages(user_message['text'], gemini_reply)
     return gemini_reply
