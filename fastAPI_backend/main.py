@@ -20,11 +20,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from routers import interview, feedback, resume
+from routers import interview, feedback, resume, tts
 
 app.include_router(interview.router)
 app.include_router(feedback.router)
 app.include_router(resume.router)
+app.include_router(tts.router)
 
 @app.get("/")
 async def root():
