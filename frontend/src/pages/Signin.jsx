@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Signin = () => {
   const navigate = useNavigate();
+  const { setIsLoggedIn } = useAuth();
   const [formData, setFormData] = useState({ emailid: '', password: '' });
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -23,8 +25,7 @@ const Signin = () => {
       });
       const data = await response.json();
       if (data.success) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        setIsLoggedIn(true, data.user, data.token);
         navigate('/dashboard-home');
       } else {
         setError(data.message || 'Login failed');

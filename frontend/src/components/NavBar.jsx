@@ -123,11 +123,11 @@ export default function Navbar() {
                       height="40"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
-                      style={{ background: "#fff", borderRadius: "50%", border: "2px solid #ccc" }}
+                      style={{ background: "#fff0", borderRadius: "50%", border: "2px solid #fff" }}
                     >
-                      <circle cx="32" cy="32" r="30" stroke="#888" strokeWidth="2" fill="#f3f4f6" />
-                      <circle cx="32" cy="26" r="10" fill="#fff" stroke="#888" strokeWidth="2" />
-                      <path d="M16 50c4-8 28-8 32 0" stroke="#888" strokeWidth="2" fill="none" />
+                      <circle cx="32" cy="32" r="30" stroke="#fff" strokeWidth="2" fill="#222" />
+                      <circle cx="32" cy="26" r="10" fill="#fff" stroke="#fff" strokeWidth="2" />
+                      <path d="M16 50c4-8 28-8 32 0" stroke="#fff" strokeWidth="2" fill="none" />
                     </svg>
                   </MenuButton>
                 </div>
