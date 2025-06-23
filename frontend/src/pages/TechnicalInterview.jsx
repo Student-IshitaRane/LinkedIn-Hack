@@ -49,9 +49,13 @@ const TechnicalInterview = () => {
         audio: false 
       });
       setCameraStream(stream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
+      
+      // Wait a bit for the video element to be ready
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 50);
     } catch (err) {
       setCameraError('Failed to access camera: ' + (err.message || err));
       console.error('Camera error:', err);
@@ -63,15 +67,23 @@ const TechnicalInterview = () => {
     if (cameraStream) {
       cameraStream.getTracks().forEach(track => track.stop());
       setCameraStream(null);
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
+    }
+    // Always clean up the video element
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
     }
   };
 
   // Toggle camera visibility
-  const toggleCamera = () => {
-    setShowCamera(!showCamera);
+  const toggleCamera = async () => {
+    if (showCamera) {
+      // Hiding camera - stop the stream
+      stopCamera();
+      setShowCamera(false);
+    } else {
+      // Showing camera - the useEffect will handle restarting the stream
+      setShowCamera(true);
+    }
   };
 
   // Cleanup camera when component unmounts or interview ends
@@ -89,6 +101,14 @@ const TechnicalInterview = () => {
       stopCamera();
     }
   }, [interviewStarted, interviewEnded]);
+
+  // Handle camera visibility changes
+  useEffect(() => {
+    if (showCamera && interviewStarted && !interviewEnded && !cameraStream) {
+      // If camera should be shown but no stream exists, start it
+      startCamera();
+    }
+  }, [showCamera, interviewStarted, interviewEnded, cameraStream]);
 
   // Add message to chat
   const addMessage = (role, content, audioUrl = null) => {

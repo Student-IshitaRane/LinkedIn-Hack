@@ -166,3 +166,15 @@ export const fastAPIService = {
     return response;
   },
 };
+
+export const getNotifications = async (token) => {
+  return axios.get(`${API_URL}/api/notifications`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+};
+
+export const markNotificationAsRead = async (id, token) => {
+  return axios.patch(`${API_URL}/api/notifications/${id}/read`, {}, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+};

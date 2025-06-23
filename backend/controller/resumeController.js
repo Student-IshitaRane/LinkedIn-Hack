@@ -11,6 +11,7 @@ import fs from 'fs';
 import path from 'path';
 import { extractTextFromPDF } from '../utils/pdfParser.js';
 import { analyzeResumeWithGemini } from '../services/geminiService.js';
+import { createNotification } from './notificationController.js';
 
 // Test connection endpoint
 const testConnection = async (req, res) => {
@@ -69,6 +70,8 @@ const analyzeResume = async (req, res) => {
 
     // Clean up the uploaded file after processing
     fs.unlinkSync(file.path);
+
+    await createNotification(req.user.id, 'Your resume analysis is ready!');
 
     res.status(200).json(response);
   } catch (error) {

@@ -32,6 +32,7 @@ export const register = async (req, res) => {
       emailid,
       password: hashedPassword,
       role,
+      isVerified: false,
     });
 
     const savedUser = await newUser.save();
@@ -50,6 +51,122 @@ export const register = async (req, res) => {
   }
 };
 
+
+export const sendOtpRegister = async (req, res) => {
+  try {
+    const {username, emailid, password, role } = req.body;
+
+    if (!emailid || !username || !role || !password) {
+      return res.status(400).json({ message: "Email, username, role, and password are required" });
+    }
+
+    let user = await User.findOne({ emailid });
+
+    if (user) {
+      if (user.isVerified) {
+        return res.status(400).json({ message: "User already registered. Please log in." });
+      }
+
+      // If user exists but is not verified, update OTP
+      user.otp = Math.floor(100000 + Math.random() * 900000).toString();
+      user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+      await user.save();
+    } else {
+      // Create new user with all fields
+      user = new User({
+        emailid,
+        username,
+        password, // Will be hashed after OTP verification
+        role,
+        isVerified: false,
+        otp: Math.floor(100000 + Math.random() * 900000).toString(),
+        otpExpires: new Date(Date.now() + 10 * 60 * 1000),
+      });
+      await user.save();
+    }
+
+    // Configure Email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // Verify Email Server
+    await transporter.verify();
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: emailid,
+      subject: "User email verification",
+      text: `Your One-Time Password (OTP) for email verification is: ${user.otp}.
+
+This OTP is valid for 10 minutes. Please do not share it with anyone.
+
+If you did not request this, please ignore this email.
+
+Thank you,  
+NextHire`,
+    });
+
+    return res.status(200).json({ message: "OTP sent successfully" });
+
+  } catch (error) {
+    console.error("Error in sendOtpRegister:", error);
+    return res.status(500).json({ message: "Error sending OTP", details: error.message });
+  }
+};
+
+export const VerifyRegister = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const { emailid } = req.params;
+
+    if (!otp) {
+      return res.status(400).json({ message: "OTP is required" });
+    }
+
+    const user = await User.findOne({ emailid });
+
+    if (!user) {
+      return res.status(400).json({ message: "User not found. Please register again." });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: "User is already verified. Please login." });
+    }
+
+    if (user.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    if (new Date() > user.otpExpires) {
+      await User.deleteOne({ emailid });
+      return res.status(400).json({ message: "OTP expired. Please register again." });
+    }
+
+    // Hash password and mark user as verified
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+    user.isVerified = true;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+
+    await user.save();
+
+    return res.status(200).json({ 
+      success: true,
+      message: "User registered successfully. Please login to continue." 
+    });
+
+  } catch (error) {
+    console.error("Error in VerifyRegister:", error);
+    return res.status(500).json({ message: "Error verifying OTP", details: error.message });
+  }
+};
+
 //login
 export const login = async (req, res) => {
   try {
@@ -58,6 +175,14 @@ export const login = async (req, res) => {
     const currentUser = await User.findOne({ emailid });
     if (!currentUser) {
       return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Check if user is verified
+    if (!currentUser.isVerified) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Please verify your email first. Check your inbox for OTP." 
+      });
     }
 
     const match = await bcrypt.compare(password, currentUser.password);

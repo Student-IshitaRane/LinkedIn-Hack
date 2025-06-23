@@ -48,14 +48,16 @@ export default function Profile() {
     setError('');
     setSuccess('');
     try {
-      const res = await userService.updateProfile(user.emailid, form);
+      // Remove emailid from form data since it's not allowed to be updated
+      const { emailid, ...updateData } = form;
+      const res = await userService.updateProfile(user.emailid, updateData);
       setUser(res.user || res); // handle both {user: ...} and user object
       setEditMode(false);
       setSuccess('Profile updated successfully!');
       // Optionally update localStorage
       localStorage.setItem('user', JSON.stringify(res.user || res));
     } catch (err) {
-      setError('Failed to update profile');
+      setError(err.response?.data?.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -125,9 +127,10 @@ export default function Profile() {
                       type="email"
                       name="emailid"
                       value={form.emailid}
-                      onChange={handleChange}
-                      className="w-full p-2 rounded bg-gray-700 border border-indigo-500 text-white"
+                      disabled
+                      className="w-full p-2 rounded bg-gray-600 border border-gray-500 text-gray-400 cursor-not-allowed"
                     />
+                    <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
                   </div>
                   <div>
                     <label className="block text-gray-400 mb-1">Password (leave blank to keep unchanged)</label>

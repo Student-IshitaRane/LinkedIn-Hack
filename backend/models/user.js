@@ -20,6 +20,9 @@ const schema=new mongoose.Schema({
     // resumeURL: {
     //     type: String, //cloudinary URL fetched 
     // },
+    isVerified: { type: Boolean, default: false }, // NEW FIELD
+    otp: { type: String }, // Store OTP temporarily
+    otpExpires: { type: Date }, // Store OTP expiration time
     },
     {timestamps:true}
 )

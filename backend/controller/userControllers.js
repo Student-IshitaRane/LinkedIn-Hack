@@ -1,6 +1,7 @@
 import User from "../models/user.js";
 import bcrypt from "bcrypt"
 import dotenv from 'dotenv'; 
+import { createNotification } from './notificationController.js';
 dotenv.config(); 
 
 const key=process.env.JWT_SECRET;
@@ -25,25 +26,48 @@ const key=process.env.JWT_SECRET;
 export const editProfile = async (req, res) => {
   const { emailid } = req.params; // emailid to find user
   const { username, password, emailid: newEmailid } = req.body;
+  const userId = req.user.id; // Get user ID from JWT token
 
   try {
+    // First find user by email from params
     let user = await User.findOne({ emailid: emailid });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    if (username) user.username = username;
-    if (newEmailid) user.emailid = newEmailid;
+    // Verify that the user from JWT token matches the user being updated
+    if (user._id.toString() !== userId) {
+      return res.status(403).json({ message: 'Not authorized to update this profile' });
+    }
+
+    // Prevent email update
+    if (newEmailid && newEmailid !== user.emailid) {
+      return res.status(400).json({ message: 'Email update is not allowed' });
+    }
+
+    // Track what was updated for notification
+    const updates = [];
+    if (username) {
+      user.username = username;
+      updates.push('username');
+    }
 
     // For password, hash it before saving
     if (password) {
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
+      updates.push('password');
     }
 
     await user.save();
     const userResponse = user.toObject();
     delete userResponse.password;
+
+    // Create notification for profile update
+    if (updates.length > 0) {
+      const updateMessage = `Your profile has been updated successfully! Updated fields: ${updates.join(', ')}`;
+      await createNotification(user._id, updateMessage);
+    }
 
     res.status(200).json(userResponse);
   } catch (err) {
@@ -55,13 +79,22 @@ export const editProfile = async (req, res) => {
 export const viewProfile = async (req, res) => {
   try {
     const { emailid } = req.params;
+    const userId = req.user.id; // Get user ID from JWT token
+    
     if (!emailid) {
       return res.status(400).json({ message: 'Email ID is required.' });
     }
+    
     const currentUser = await User.findOne({ emailid }).select('-password');
     if (!currentUser) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    // Verify that the user from JWT token matches the user being viewed
+    if (currentUser._id.toString() !== userId) {
+      return res.status(403).json({ message: 'Not authorized to view this profile' });
+    }
+
     res.status(200).json(currentUser);
   } catch (error) {
     res.status(500).json({ error: error.message });

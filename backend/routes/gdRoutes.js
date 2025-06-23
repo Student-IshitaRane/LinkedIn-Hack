@@ -2,7 +2,8 @@
 //const { GoogleGenerativeAI } = require('@google/generative-ai');
 import express from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
+import { createNotification } from '../controller/notificationController.js';
+import { verifyToken } from '../middleware/verify.js';
 const router = express.Router();
 
 // Initialize Gemini
@@ -22,7 +23,7 @@ async function generateResponse(prompt) {
 }
 
 // Generate GD topic
-router.post('/generate-topic', async (req, res) => {
+router.post('/generate-topic', verifyToken, async (req, res) => {
   try {
     const { company, jobProfile } = req.body;
     
@@ -30,6 +31,7 @@ router.post('/generate-topic', async (req, res) => {
     Make it contemporary and slightly controversial to spark discussion. Example format: "Should ${company} prioritize [controversial idea] in [specific context]?"`;
     
     const topic = await generateResponse(prompt);
+    await createNotification(req.user.id, 'Your Group Discussion topic is assigned!');
     res.json({ topic: topic.trim() });
   } catch (error) {
     console.error("Topic generation error:", error);
@@ -90,6 +92,7 @@ router.post('/generate-initial-messages', async (req, res) => {
 
     const response = await generateResponse(prompt);
     const messages = JSON.parse(response);
+    // await createNotification(req.user.id, 'Your Group Discussion is started!');
     res.json({ messages });
   } catch (error) {
     console.error("Initial messages error:", error);

@@ -6,6 +6,8 @@ import http from "http";
 import jwt from "jsonwebtoken";
 import axios from "axios";
 import rateLimit from 'express-rate-limit';
+import notificationRoutes from './routes/notification.js';
+import { WebSocketServer } from 'ws';
 
 dotenv.config();
 const app = express();
@@ -74,6 +76,51 @@ app.use('/api/interview', async (req, res, next) => {
   }
 });
 
+// WebSocket server for real-time notifications
+const wss = new WebSocketServer({ server });
+
+// Store connected clients
+const clients = new Map();
+
+wss.on('connection', (ws, req) => {
+  console.log('New WebSocket connection');
+  
+  ws.on('message', (message) => {
+    try {
+      const data = JSON.parse(message);
+      if (data.type === 'auth' && data.token) {
+        // Verify JWT token and store client
+        jwt.verify(data.token, process.env.JWT_SECRET, (err, decoded) => {
+          if (!err) {
+            clients.set(decoded.id, ws);
+            ws.userId = decoded.id;
+            console.log(`User ${decoded.id} connected to WebSocket`);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('WebSocket message error:', error);
+    }
+  });
+
+  ws.on('close', () => {
+    if (ws.userId) {
+      clients.delete(ws.userId);
+      console.log(`User ${ws.user.id} disconnected from WebSocket`);
+    }
+  });
+});
+
+// Function to send notification to specific user
+export const sendNotificationToUser = (userId, notification) => {
+  const client = clients.get(userId);
+  if (client && client.readyState === 1) { // 1 = WebSocket.OPEN
+    client.send(JSON.stringify({
+      type: 'notification',
+      data: notification
+    }));
+  }
+};
 
 // Routes
 app.use("/interviews", interviewRoutes);
@@ -81,6 +128,7 @@ app.use('/api/resume', resumeRoutes);
 app.use('/api/gd', gdRoutes);
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

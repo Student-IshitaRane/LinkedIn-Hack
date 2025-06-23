@@ -1,0 +1,49 @@
+Amisha Gupta
+(cid:131) +91 8837828008 # amishagupta2704@gmail.com (cid:239) LinkedIn § GitHub
+Education
+Punjab Engineering College Chandigarh, India
+Bachelor of Technology in Computer Science; CGPA: 8.81/10 Aug. 2023 – May 2027
+Bhavan Vidyalaya Panchkula Panchkula, Haryana
+Class XII; Percentage: 95.8% May 2023
+Bhavan Vidyalaya Panchkula Panchkula, Haryana
+Class X; Percentage: 96.4% May 2021
+Technical Skills
+• Languages: Python, C/C++, HTML/CSS, React/Vite, Node.js, Express.js, Javascript
+• Developer Tools: VS Code, PyCharm, Figma, Postman, GitHub, MongoDB, Cloudinary, Firebase
+• Libraries: Scikit-learn, Pandas, NumPy, Matplotlib, Mongoose, TensorFlow
+• Computer Fundamentals: Data Structures, OOPS, Computer Networks, Data Science and Machine
+Learning, Discrete Structures
+Projects
+HOSTELBUDDIE– Special Mention, Ideathon 4.0 (40+ teams) Dec 2024 – Jan 2025
+• Implemented roommate matching using Cosine Similarity, a Lost-and-Found portal, and a student
+marketplace for academic exchanges.
+ENTRECONNECT – Special Mention, Hack2Hatch Hackathon (700+ teams)
+• Built a platform for entrepreneurs to connect with peers, mentors, and investors by matching shared interests.
+• Used Gemini API to integrate NLP-powered conversational chatbot for startup guidance.
+NEXTHIRE – AI-Powered Career Simulation Platform
+• Developed a comprehensive AI platform for career readiness and recruitment using real-time simulations and
+intelligent evaluation tools.
+• Integrated AI-driven mock interviews, ATS-based resume analyzer, and a virtual workspace mimicking
+real-world team dynamics with avatars.
+Position of Responsibility
+Implementation Body member, ACM-CSS PEC August 2024 – Present
+• Organized and led coding sessions to help 100+ students enhance programming skills and improve
+problem-solving techniques.
+Session Management Committee Member, AICTA Conference Dec 2023
+• Contributed to the smooth operation of conference sessions by coordinating schedules, managing more than
+participant inquiries, and ensuring a seamless experience for attendees and speakers.
+Publicity Sub Head, Pecfest 2024 Oct 2024
+• Led publicity efforts for Pecfest 2024, overseeing social media campaigns, managing promotional materials, and
+coordinating with teams to increase event visibility and engagement among students and the community.
+Achievements
+LinkedIn CoachIn Program 2025 Selected
+• Selected from a highly competitive pool of 18,000+ applicants for the prestigious LinkedIn CoachIn Program
+2025, a premier mentorship and training initiative designed to develop emerging talent.
+Open Source Contribution in PWOC - Special Mention
+• Contributed to multiple projects in the PEC Winter of Code open-source program by successfully resolving
+issues. Secured a Special Mention (5th position) among 200+ participants with 16 pull requests merged.
+Hackathon Special Mention
+• Ranked among the Top 6 teams out of 700+ participants in the Hack2Hatch Hackathon.
+Academic Excellence, Olympiad Achievements & Awards
+• Received Certificates of Merit in Class 11 & 12 for outstanding academic performance.
+• Achieved All-India Rank 1 (subject-wise in Physics) in Class 9 at the NSTSE 2020.

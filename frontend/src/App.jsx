@@ -12,6 +12,7 @@ import Signup from './pages/Signup';
 import Signin from './pages/Signin';
 import ForgotPassword from './pages/ForgotPassword';
 import VerifyOTP from './pages/VerifyOTP';
+import VerifyOtpRegister from './pages/VerifyOtpRegister';
 import ResetPassword from './pages/ResetPassword';
 import VirtualWorkSim from './pages/VirtualWorkSim';
 import NavBar from './components/NavBar';
@@ -42,6 +43,7 @@ export default function App() {
               <Route path="/signin" element={<Signin />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/verify-otp/:emailid" element={<VerifyOTP />} />
+              <Route path="/verify-register-otp/:emailid" element={<VerifyOtpRegister />} />
               <Route path="/reset-password/:emailid" element={<ResetPassword />} />
               <Route path="/setting" element={<Setting />} />
               <Route path="/dashboard-home" element={<DashboardHomePage />} />
