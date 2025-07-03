@@ -215,7 +215,7 @@ export const login = async (req, res) => {
 export const details=async(req,resp)=>{
     try {
         const emailid=req.user.emailid;
-        const currentUser=await Entre.findOne({emailid:emailid});
+        const currentUser=await User.findOne({emailid:emailid});
         resp.json({username:currentUser.username});
     } catch (error) {
         console.log("there has been an error ", error);
