@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, HTTPException, Body, Request
+from fastapi import APIRouter, UploadFile, HTTPException, Body, Request, File
 from pathlib import Path
 import tempfile, shutil
 from services.stt_service import analyze_audio_with_assemblyai, save_assemblyai_analysis
@@ -12,6 +12,7 @@ from fastapi.responses import StreamingResponse, JSONResponse
 import base64
 from pydantic import BaseModel
 from utils.audio_convert import convert_webm_to_mp3
+from utils.file_utils import POSITION_FILE
 
 router = APIRouter()
 
@@ -20,7 +21,23 @@ LAST_TRANSCRIPT_FILE = 'last_transcript.txt'
 class TextAnswer(BaseModel):
     answer: str
 
-@router.post("/talk")
+class HRInterviewStartRequest(BaseModel):
+    company: str
+    role: str
+
+class HRInterviewAnswerRequest(BaseModel):
+    answer: str
+
+class HRStartRequest(BaseModel):
+    company: str
+    role: str
+
+class HRAnswerRequest(BaseModel):
+    company: str
+    role: str
+    answer: str
+
+@router.post("/talk") # for technical interview
 async def post_audio(file: UploadFile):
     try:
         file_ext = Path(file.filename).suffix.lower()
@@ -61,7 +78,7 @@ async def post_audio(file: UploadFile):
         print("Error in /talk:", e)
         raise HTTPException(500, detail=str(e))
 
-@router.get("/last_transcript")
+@router.get("/last_transcript") # for technical interview
 async def last_transcript():
     try:
         if not os.path.exists(LAST_TRANSCRIPT_FILE):
@@ -72,7 +89,7 @@ async def last_transcript():
     except Exception as e:
         return {"transcript": ""}
 
-@router.post("/set_position")
+@router.post("/set_position") # for technical interview
 async def set_position(position: str = Body(..., embed=True)):
     from utils.file_utils import POSITION_FILE, DATABASE_FILE, ASSEMBLYAI_ANALYSIS_FILE, DIFFICULTY_FILE
     import json
@@ -101,13 +118,13 @@ async def set_position(position: str = Body(..., embed=True)):
     POSITION_FILE.write_text(position)
     return {"message": f"Position set to '{position}' and interview state reset."}
 
-@router.post("/set_difficulty")
+@router.post("/set_difficulty") # for technical interview
 async def set_difficulty(difficulty: str = Body(..., embed=True)):
     from utils.file_utils import DIFFICULTY_FILE
     DIFFICULTY_FILE.write_text(difficulty)
     return {"message": f"Difficulty set to '{difficulty}'"}
 
-@router.post("/set_interview_type")
+@router.post("/set_interview_type") # for technical interview
 async def set_interview_type(interview_type: str = Body(..., embed=True)):
     from utils.file_utils import INTERVIEW_TYPE_FILE, DATABASE_FILE
     import json
@@ -127,7 +144,7 @@ async def set_interview_type(interview_type: str = Body(..., embed=True)):
         ], indent=4))
     return {"message": f"Interview type set to '{interview_type}'"}
 
-@router.post("/end_interview")
+@router.post("/end_interview") 
 async def end_interview():
     return {"message": "Interview ended by user."}
 
@@ -145,7 +162,7 @@ async def clear_history():
     except Exception as e:
         raise HTTPException(500, detail=str(e))
 
-@router.get("/first_question")
+@router.get("/first_question") #for technical interview
 async def first_question():
     try:
         # The introduction question
@@ -165,7 +182,7 @@ async def first_question():
         print("Error in /first_question:", e)
         raise HTTPException(500, detail=str(e))
 
-@router.post("/talk_text_full")
+@router.post("/talk_text_full") #for technical interview
 async def talk_text_full(answer: TextAnswer):
     try:
         # Prevent empty answers
@@ -184,3 +201,124 @@ async def talk_text_full(answer: TextAnswer):
     except Exception as e:
         print("Error in /talk_text_full:", e)
         raise HTTPException(500, detail=str(e))
+
+@router.post("/hr_interview/start")
+async def start_hr_interview(request: HRInterviewStartRequest):
+    # Save company and role to position.txt (or a new file if needed)
+    with open("position.txt", "w", encoding="utf-8") as f:
+        f.write(request.role)
+    with open("company.txt", "w", encoding="utf-8") as f:
+        f.write(request.company)
+    if os.path.exists("database.json"): os.remove("database.json")
+    from services.gemini_service import get_hr_interview_question
+    question = await get_hr_interview_question(
+        company=request.company,
+        role=request.role,
+        previous_answers=[]
+    )
+    return {"question": question}
+
+@router.post("/hr_interview/answer")
+async def answer_hr_interview(request: HRInterviewAnswerRequest):
+    from database.chat_history import save_messages, load_messages
+    from services.gemini_service import get_hr_interview_question
+    save_messages(request.answer, "")
+    company = ""
+    role = ""
+    if os.path.exists("company.txt"):
+        with open("company.txt", encoding="utf-8") as f:
+            company = f.read().strip()
+    if os.path.exists("position.txt"):
+        with open("position.txt", encoding="utf-8") as f:
+            role = f.read().strip()
+    next_question = await get_hr_interview_question(
+        company=company,
+        role=role,
+        previous_answers=[request.answer]
+    )
+    return {"next_question": next_question}
+
+@router.post("/hr_interview/feedback")
+async def hr_interview_feedback(request: HRInterviewStartRequest):
+    from database.chat_history import load_messages
+    from services.gemini_service import get_hr_feedback
+    company = request.company
+    role = request.role
+    messages = load_messages()
+    answers = [m['content'] for m in messages if m['role'] == 'user']
+    all_answers = " ".join(answers)
+    # Compose a feedback prompt for Gemini
+    feedback_prompt = (
+        f"The following are the answers given by a candidate in an HR interview for the role of {role} at {company}. "
+        f"Please provide detailed feedback on the following aspects:\n"
+        f"1. Emotional tone\n2. Empathy level\n3. Articulation\n4. Use of the STAR methodology (Situation, Task, Action, Result)\n"
+        f"Also, give actionable suggestions for improvement at the end.\n\nAnswers:\n{all_answers}"
+    )
+    feedback = await get_hr_feedback(company=company, role=role, answer=feedback_prompt)
+    return {"feedback": feedback}
+
+@router.post("/hr_interview/voice_answer")
+async def hr_interview_voice_answer(file: UploadFile = File(...)):
+    from services.stt_service import analyze_audio_with_assemblyai
+    from utils.audio_convert import convert_webm_to_mp3
+    import tempfile, os
+    # Save uploaded file to temp
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.webm') as tmp:
+        content = await file.read()
+        tmp.write(content)
+        tmp_path = tmp.name
+    # Check file size
+    file_size = os.path.getsize(tmp_path)
+    if file_size == 0:
+        os.unlink(tmp_path)
+        raise HTTPException(400, detail="Uploaded audio file is empty. Please try recording again.")
+    # Convert webm to mp3 if needed
+    try:
+        mp3_path = tmp_path + '.mp3'
+        convert_webm_to_mp3(tmp_path, mp3_path)
+        os.unlink(tmp_path)
+        audio_path = mp3_path
+    except Exception as e:
+        os.unlink(tmp_path)
+        raise HTTPException(400, detail=f"Audio conversion failed: {str(e)}")
+    # Transcribe
+    result = analyze_audio_with_assemblyai(audio_path)
+    transcript = result.get('text', '')
+    # Clean up temp file
+    if os.path.exists(audio_path):
+        os.unlink(audio_path)
+    return {"transcript": transcript}
+
+@router.post("/hr_interview/voice_answer_and_next")
+async def hr_interview_voice_answer_and_next(file: UploadFile = File(...)):
+    from services.stt_service import analyze_audio_with_assemblyai
+    from database.chat_history import save_messages
+    from services.gemini_service import get_hr_interview_question
+    import tempfile
+    import os
+    # Save uploaded file to temp
+    with tempfile.NamedTemporaryFile(delete=False, suffix=file.filename) as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+    # Transcribe
+    result = analyze_audio_with_assemblyai(tmp_path)
+    transcript = result.get('text', '')
+    # Save answer
+    save_messages(transcript, "")
+    # Get company/role
+    company = ""
+    role = ""
+    if os.path.exists("company.txt"):
+        with open("company.txt", encoding="utf-8") as f:
+            company = f.read().strip()
+    if os.path.exists("position.txt"):
+        with open("position.txt", encoding="utf-8") as f:
+            role = f.read().strip()
+    # Add instruction to keep questions short
+    next_question = await get_hr_interview_question(
+        company=company,
+        role=role,
+        previous_answers=[transcript],
+        instruction="Keep the question under 18 words."
+    )
+    return {"transcript": transcript, "next_question": next_question}

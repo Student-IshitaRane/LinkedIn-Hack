@@ -8,7 +8,7 @@ A dual-purpose AI platform to **boost career readiness** and **revolutionize tec
 
 ### 🧠 Career & Interview Intelligence
 
-* **AI-Powered Mock Interviews**: Practice tech and HR rounds with instant feedback on tone, clarity, and content relevance.
+* **AI-Powered Mock Interviews**: Practice personalized tech and HR rounds. Upload your resume for tailored questions, and get instant feedback on tone, clarity, confidence, and accuracy.
 * **Resume Analyzer**: Upload your resume to get an ATS (Applicant Tracking System) compatibility score along with actionable insights — including keyword optimization, formatting tips, and personalized improvement suggestions to enhance recruiter visibility.
 * **Group Discussion (GD) Rooms**: Engage in real-world group discussion scenarios through AI-moderated sessions. Designed to simulate dynamic, role-based environments, GD Rooms help you enhance communication, teamwork, and leadership skills with structured performance reports.
 
@@ -38,15 +38,15 @@ Github repository : https://github.com/avanimathur/TeamFlow
 * Node.js
 * Express.js
 * MongoDB
-* Flask (Python)
 * Cloudinary
+* FastAPI
 
 ### AI & ML
 
 * GenAI prompts
 * Text-to-Speech / Speech-to-Text APIs
-* GPT APIs
-* Flask-CORS (integration)
+* Sentiment analysis of voice (AssemblyAI API) 
+* Gemini API
 
 ### Tools & Libraries
 
