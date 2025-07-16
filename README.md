@@ -1,4 +1,8 @@
 # LinkedIn-Hack
+
+#### [Demo Video](https://docs.google.com/presentation/d/1GMKYeq8IKfjteEXGARJtIvp6SaKPjhbr/edit?usp=sharing&ouid=106720804260623378925&rtpof=true&sd=true)
+#### [Presentation Deck](https://drive.google.com/file/d/10qpxSn7xeRNc3ciphcv7CeqJ1YnpkN2S/view?usp=sharing)
+
 # 🚀 AI InterviewVerse & Virtual Work Simulation
 
 A dual-purpose AI platform to **boost career readiness** and **revolutionize tech hiring** with smart simulations and real-time evaluation.
