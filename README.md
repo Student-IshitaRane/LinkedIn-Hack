@@ -1,4 +1,4 @@
-# LinkedIn-Hack
+# NextHire
 
 #### [Demo Video](https://docs.google.com/presentation/d/1GMKYeq8IKfjteEXGARJtIvp6SaKPjhbr/edit?usp=sharing&ouid=106720804260623378925&rtpof=true&sd=true)
 #### [Presentation Deck](https://drive.google.com/file/d/10qpxSn7xeRNc3ciphcv7CeqJ1YnpkN2S/view?usp=sharing)
