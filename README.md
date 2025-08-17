@@ -52,9 +52,9 @@ A dual-purpose AI platform to **boost career readiness** and **revolutionize tec
 ## 👥 Contributors
 
 * Amisha Gupta
+* Ishita
 * Lipsita
 * Avani Mathur
-* Ishita
 * Khushi
 
 ---
