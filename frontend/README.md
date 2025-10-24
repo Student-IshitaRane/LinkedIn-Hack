@@ -10,3 +10,17 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+
+## Run frontend
+npm install
+cd frontend
+npm run dev
+
+## Run backend(make sure that gemini model is latest right now it is gemini-2.5-flash )
+npm install
+cd backend
+node app.js
+
+## run fastAPI backend
+python -m uvicorn main:app --reload

@@ -1,0 +1,60 @@
+ISHITA RANE
+BTech Undergraduate (Electronics and Telecommunication)
+with Honours in Cybersecurity.
+ishita.rane@cumminscollege.in
++91 7666538805
+Pune, Maharashtra
+https://www.linkedin.com/in/ishita-rane-9225b0282/
+https://github.com/Student-IshitaRane
+EDUCATION PROJECTS
+MKSSS’s Cummins College of
+NextHire- LinkedIn CoachIn Hackathon
+Engineering for Women, Pune
+Built full-stack AI-powered mock interview and resume
+2023-2027
+analysis platform using Gemini API and AssemblyAI for
+CGPA - 9.05 (current) sentiment and speech analysis. Developed GD rooms with
+real-time AI feedback on communication and confidence,
+TECHNICAL SKILLS and designed an HR mock interview analyzing responses
+using the STAR method.
+EVolve- EV charging session management system
+Java(Data Structures and Algorithm)
+Machine Learning in Python
+Built an interactive desktop GUI with MySQL integration for
+HTML, CSS, Javascript(Basic)
+real-time booking and management of EV charging
+React.js, Express.js, Node.js(Basic)
+stations. Implemented dual-role access (Admin/User),
+DBMS, OS, OOPs, CN session scheduling, wallet tracking, feedback handling, and
+MySQL dynamic cost/time estimations.
+SmartFarm – Weather-Based Crop Prediction System
+SOFT SKILLS
+Developed a machine learning model using Naive Bayes,
+Decision Tree, and Linear Regression to recommend
+Problem Solving
+optimal crops based on soil and environmental data,
+Leadership
+achieving 95% accuracy with Naive Bayes and deploying a
+Teamwork
+real-time decision tool for farmers.
+Communication
+Time Management
+Smart Placement Portal– CodeSprint Hackathon
+Built a role-based web platform for automated student
+POSITION OF
+filtering, company postings, and targeted notifications.
+RESPONSIBILITY
+Integrated coding leaderboards (LeetCode, Codeforces,
+GFG) and real-time dashboards for application tracking
+Google Developer Groups CCOEW and performance insights.
+Head of Design Team
+ACHIEVEMENTS
+GDG WOW 2025, Pune
+Design Specialist
+Solved 300+ questions on Leetcode
+LOOP (DSA Club), CCOEW Winner at LinkedIn CoachIn GEN-AI Hackathon
+Selected for LinkedIn CoachIn program 2025 - Top 80
+Technical Organizer
+Selected for Microsoft SEFA 2025 among top 100
+Wings Magazine,CCOEW Grace Hopper Celebration India 2024 scholar
+Design Specialist Winner of the IEEE poster presentation competition 2024
